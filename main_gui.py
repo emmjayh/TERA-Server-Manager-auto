@@ -289,7 +289,6 @@ class MainWindow(QMainWindow):
         self.timer.timeout.connect(self._load_and_display_statuses)
         self.timer.start(REFRESH_INTERVAL_MS)
         
-        # Schedule initial delayed starts after main UI is up
         self._schedule_initial_delayed_starts()
 
 
@@ -316,7 +315,7 @@ class MainWindow(QMainWindow):
         actions_menu.addAction(stop_all_action)
 
 
-        self.statusBar = QStatusBar()
+        self.statusBar = QStatusBar() # Correctly initialized here
         self.setStatusBar(self.statusBar)
         self.statusBar.showMessage("Ready")
 
@@ -372,7 +371,6 @@ class MainWindow(QMainWindow):
         if dialog.exec(): 
             self.statusBar.showMessage("Configuration updated. Refreshing main display...", 3000)
             self._load_and_display_statuses() 
-            # After config change, re-evaluate delayed starts for any new/modified services
             self._schedule_initial_delayed_starts() 
         else:
             self.statusBar.showMessage("Configuration editing cancelled.", 3000)
@@ -562,12 +560,11 @@ class MainWindow(QMainWindow):
         self.table_widget.setItem(row_index, 3, pid_item)
 
     def _schedule_initial_delayed_starts(self):
-        """Schedules services with StartupDelaySeconds > 0 to start after their delay."""
-        self.statusBar().showMessage("Scheduling initial delayed service starts...", 2000)
+        self.statusBar.showMessage("Scheduling initial delayed service starts...", 2000)
         config_data = service_utils.load_config(CONFIG_FILE_PATH)
 
         if not config_data:
-            self.statusBar().showMessage("No configuration for delayed starts.", 3000)
+            self.statusBar.showMessage("No configuration for delayed starts.", 3000)
             return
 
         for entry in config_data:
@@ -577,31 +574,24 @@ class MainWindow(QMainWindow):
             if service_name and delay_seconds > 0:
                 current_status, _ = service_utils.get_service_status(service_name)
                 if current_status == "stopped":
-                    # Use a lambda that captures the current service_name
                     QTimer.singleShot(delay_seconds * 1000, lambda s=service_name: self._attempt_delayed_start(s))
-                    self.statusBar().showMessage(f"'{service_name}' scheduled for delayed start in {delay_seconds}s.", 5000)
-                # else:
-                    # Optional: Log if service is already running or in an unexpected state
-                    # print(f"Service '{service_name}' has delay but is not stopped (status: {current_status}). Not scheduling.")
+                    self.statusBar.showMessage(f"'{service_name}' scheduled for delayed start in {delay_seconds}s.", 5000)
             
     def _attempt_delayed_start(self, service_name: str):
-        """Attempts to start a service that was scheduled for a delayed start."""
-        self.statusBar().showMessage(f"Attempting delayed start for '{service_name}'...", 3000)
+        self.statusBar.showMessage(f"Attempting delayed start for '{service_name}'...", 3000)
         
-        # Double-check status before starting, in case it was started manually in the meantime
         current_status, _ = service_utils.get_service_status(service_name)
         if current_status != "stopped":
-            self.statusBar().showMessage(f"Delayed start for '{service_name}' skipped: Service no longer stopped (status: {current_status}).", 5000)
-            self._load_and_display_statuses() # Refresh to show current correct status
+            self.statusBar.showMessage(f"Delayed start for '{service_name}' skipped: Service no longer stopped (status: {current_status}).", 5000)
+            self._load_and_display_statuses()
             return
 
         success = service_utils.start_service_app(service_name)
         if success:
-            self.statusBar().showMessage(f"Delayed start command issued for '{service_name}'.", 5000)
+            self.statusBar.showMessage(f"Delayed start command issued for '{service_name}'.", 5000)
         else:
-            self.statusBar().showMessage(f"Failed to issue delayed start command for '{service_name}'.", 5000)
+            self.statusBar.showMessage(f"Failed to issue delayed start command for '{service_name}'.", 5000)
         
-        # Refresh the whole table to reflect the change
         self._load_and_display_statuses()
 
 
