@@ -1,0 +1,149 @@
+[
+  {
+    "FriendlyName": "Hub Server",
+    "AppPath": "C:\\Path\\To\\Your\\App\\hubServer.bat",
+    "AppArguments": "/config:hub.json",
+    "LogDirectory": "C:\\AppLauncherLogs\\HubServer",
+    "ServiceName": "HubServer"
+  },
+  {
+    "FriendlyName": "Hub Gateway",
+    "AppPath": "C:\\Path\\To\\Your\\App\\hubGateway.exe",
+    "AppArguments": "--port 9000",
+    "LogDirectory": "C:\\AppLauncherLogs\\HubGateway",
+    "ServiceName": "HubGateway"
+  },
+  {
+    "FriendlyName": "SteerHub Application",
+    "AppPath": "C:\\Path\\To\\Your\\App\\SteerHub.exe",
+    "AppArguments": "",
+    "LogDirectory": "C:\\AppLauncherLogs\\SteerHub",
+    "ServiceName": "SteerHub"
+  },
+  {
+    "FriendlyName": "SteerSession Server",
+    "AppPath": "C:\\Path\\To\\Your\\App\\SteerSession.bat",
+    "AppArguments": "-mode master",
+    "LogDirectory": "C:\\AppLauncherLogs\\SteerSession",
+    "ServiceName": "SteerSession"
+  },
+  {
+    "FriendlyName": "SteerMind Application",
+    "AppPath": "C:\\Path\\To\\Your\\App\\SteerMind.exe",
+    "AppArguments": "/monitor",
+    "LogDirectory": "C:\\AppLauncherLogs\\SteerMind",
+    "ServiceName": "SteerMind"
+  },
+  {
+    "FriendlyName": "SteerCast Server",
+    "AppPath": "C:\\Path\\To\\Your\\App\\SteerCast.exe",
+    "AppArguments": "",
+    "LogDirectory": "C:\\AppLauncherLogs\\SteerCast",
+    "ServiceName": "SteerCast"
+  },
+  {
+    "FriendlyName": "SteerGateway Server",
+    "AppPath": "C:\\Path\\To\\Your\\App\\SteerGateway.bat",
+    "AppArguments": "/clientport 7777",
+    "LogDirectory": "C:\\AppLauncherLogs\\SteerGateway",
+    "ServiceName": "SteerGateway"
+  },
+  {
+    "FriendlyName": "SteerWeb Application",
+    "AppPath": "C:\\Path\\To\\Your\\App\\SteerWeb.exe",
+    "AppArguments": "--httpport 80",
+    "LogDirectory": "C:\\AppLauncherLogs\\SteerWeb",
+    "ServiceName": "SteerWeb"
+  },
+  {
+    "FriendlyName": "BoxApi Server",
+    "AppPath": "C:\\Path\\To\\Your\\App\\BoxApi.exe",
+    "AppArguments": "",
+    "LogDirectory": "C:\\AppLauncherLogs\\BoxApi",
+    "ServiceName": "BoxApi"
+  },
+  {
+    "FriendlyName": "BoxWeb Application",
+    "AppPath": "C:\\Path\\To\\Your\\App\\BoxWeb.bat",
+    "AppArguments": "/theme dark",
+    "LogDirectory": "C:\\AppLauncherLogs\\BoxWeb",
+    "ServiceName": "BoxWeb"
+  },
+  {
+    "FriendlyName": "TeraApi Server",
+    "AppPath": "C:\\Path\\To\\Your\\App\\TeraApi.exe",
+    "AppArguments": "-verbose",
+    "LogDirectory": "C:\\AppLauncherLogs\\TeraApi",
+    "ServiceName": "TeraApi"
+  },
+  {
+    "FriendlyName": "NexusServer Application",
+    "AppPath": "C:\\Path\\To\\Your\\App\\NexusServer.exe",
+    "AppArguments": "",
+    "LogDirectory": "C:\\AppLauncherLogs\\NexusServer",
+    "ServiceName": "NexusServer"
+  },
+  {
+    "FriendlyName": "LogServer",
+    "AppPath": "C:\\Path\\To\\Your\\App\\LogServer.bat",
+    "AppArguments": "/level:info",
+    "LogDirectory": "C:\\AppLauncherLogs\\LogServer",
+    "ServiceName": "LogServer"
+  },
+  {
+    "FriendlyName": "TopographyServer",
+    "AppPath": "C:\\Path\\To\\Your\\App\\TopographyServer.exe",
+    "AppArguments": "--region us-east",
+    "LogDirectory": "C:\\AppLauncherLogs\\TopographyServer",
+    "ServiceName": "TopographyServer"
+  },
+  {
+    "FriendlyName": "ArbiterGateway",
+    "AppPath": "C:\\Path\\To\\Your\\App\\ArbiterGateway.exe",
+    "AppArguments": "",
+    "LogDirectory": "C:\\AppLauncherLogs\\ArbiterGateway",
+    "ServiceName": "ArbiterGateway"
+  },
+  {
+    "FriendlyName": "ArbiterServer",
+    "AppPath": "C:\\Path\\To\\Your\\App\\ArbiterServer.bat",
+    "AppArguments": "/core 4",
+    "LogDirectory": "C:\\AppLauncherLogs\\ArbiterServer",
+    "ServiceName": "ArbiterServer"
+  },
+  {
+    "FriendlyName": "WorldServer",
+    "AppPath": "C:\\Path\\To\\Your\\App\\WorldServer.exe",
+    "AppArguments": "--instance main",
+    "LogDirectory": "C:\\AppLauncherLogs\\WorldServer",
+    "ServiceName": "WorldServer"
+  },
+  {
+    "FriendlyName": "DungeonServer",
+    "AppPath": "C:\\Path\\To\\Your\\App\\DungeonServer.exe",
+    "AppArguments": "/maxplayers 10",
+    "LogDirectory": "C:\\AppLauncherLogs\\DungeonServer",
+    "ServiceName": "DungeonServer"
+  },
+  {
+    "FriendlyName": "PartyMatching Service",
+    "AppPath": "C:\\Path\\To\\Your\\App\\PartyMatching.bat",
+    "AppArguments": "",
+    "LogDirectory": "C:\\AppLauncherLogs\\PartyMatching",
+    "ServiceName": "PartyMatching"
+  },
+  {
+    "FriendlyName": "BattleFieldsServer",
+    "AppPath": "C:\\Path\\To\\Your\\App\\BattleFieldsServer.exe",
+    "AppArguments": "--map rotation",
+    "LogDirectory": "C:\\AppLauncherLogs\\BattleFieldsServer",
+    "ServiceName": "BattleFieldsServer"
+  },
+  {
+    "FriendlyName": "Steer Application",
+    "AppPath": "C:\\Path\\To\\Your\\App\\Steer.exe",
+    "AppArguments": "/control",
+    "LogDirectory": "C:\\AppLauncherLogs\\Steer",
+    "ServiceName": "Steer"
+  }
+]

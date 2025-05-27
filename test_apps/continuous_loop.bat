@@ -1,0 +1,6 @@
+@echo off
+echo Starting continuous_loop.bat...
+:loop
+echo %date% %time% - Continuous_loop.bat is running...
+timeout /t 5 /nobreak > nul
+goto loop

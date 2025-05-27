@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Parts Status Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        h1 { text-align: center; color: #333; }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            background-color: #fff;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px 15px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
+        .status-running { color: green; font-weight: bold; }
+        .status-stopped { color: red; font-weight: bold; }
+        .status-not-found { color: orange; font-weight: bold; }
+        .status-other { color: #555; }
+        #errorMessage {
+            text-align: center;
+            color: red;
+            background-color: #ffe0e0;
+            padding: 10px;
+            border: 1px solid red;
+            border-radius: 5px;
+            margin: 20px auto;
+            width: 80%;
+            display: none; /* Hidden by default */
+        }
+        #loadingMessage {
+            text-align: center;
+            color: #007bff;
+            padding: 10px;
+            margin: 20px auto;
+            width: 80%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Server Parts Status Dashboard</h1>
+    <div id="loadingMessage">Loading status...</div>
+    <div id="errorMessage"></div>
+    <table>
+        <thead>
+            <tr>
+                <th>Friendly Name</th>
+                <th>Service Name</th>
+                <th>Status</th>
+                <th>PID</th>
+            </tr>
+        </thead>
+        <tbody id="statusTableBody">
+            <!-- Rows will be inserted here by JavaScript -->
+        </tbody>
+    </table>
+
+    <script>
+        const STATUS_ENDPOINT = '/status';
+        const REFRESH_INTERVAL = 7000; // 7 seconds
+
+        const statusTableBody = document.getElementById('statusTableBody');
+        const errorMessageDiv = document.getElementById('errorMessage');
+        const loadingMessageDiv = document.getElementById('loadingMessage');
+
+        function getStatusClass(status) {
+            if (!status) return 'status-other';
+            const lowerStatus = status.toLowerCase();
+            if (lowerStatus === 'running') return 'status-running';
+            if (lowerStatus === 'stopped') return 'status-stopped';
+            if (lowerStatus === 'not found') return 'status-not-found';
+            return 'status-other';
+        }
+
+        async function fetchStatus() {
+            errorMessageDiv.style.display = 'none'; // Hide error message before new fetch
+            loadingMessageDiv.style.display = 'block'; // Show loading message
+
+            try {
+                const response = await fetch(STATUS_ENDPOINT);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status} - ${response.statusText}`);
+                }
+                const data = await response.json();
+
+                // Clear existing table rows
+                statusTableBody.innerHTML = '';
+
+                if (data && data.length > 0) {
+                    data.forEach(item => {
+                        const row = statusTableBody.insertRow();
+                        const friendlyNameCell = row.insertCell();
+                        const serviceNameCell = row.insertCell();
+                        const statusCell = row.insertCell();
+                        const pidCell = row.insertCell();
+
+                        friendlyNameCell.textContent = item.FriendlyName || 'N/A';
+                        serviceNameCell.textContent = item.ServiceName || 'N/A';
+                        
+                        statusCell.textContent = item.Status || 'N/A';
+                        statusCell.className = getStatusClass(item.Status);
+                        
+                        pidCell.textContent = (item.PID === null || item.PID === undefined || (item.Status && item.Status.toLowerCase() !== 'running')) ? 'N/A' : item.PID;
+                    });
+                } else {
+                    const row = statusTableBody.insertRow();
+                    const cell = row.insertCell();
+                    cell.colSpan = 4;
+                    cell.textContent = 'No status information available.';
+                    cell.style.textAlign = 'center';
+                }
+                errorMessageDiv.style.display = 'none';
+            } catch (error) {
+                console.error('Error fetching status:', error);
+                statusTableBody.innerHTML = ''; // Clear table on error
+                errorMessageDiv.textContent = `Failed to load status: ${error.message}. Retrying in ${REFRESH_INTERVAL / 1000} seconds.`;
+                errorMessageDiv.style.display = 'block';
+            } finally {
+                loadingMessageDiv.style.display = 'none'; // Hide loading message after fetch attempt
+            }
+        }
+
+        // Initial fetch
+        fetchStatus();
+
+        // Auto-refresh
+        setInterval(fetchStatus, REFRESH_INTERVAL);
+    </script>
+</body>
+</html>
