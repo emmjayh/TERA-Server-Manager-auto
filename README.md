@@ -18,6 +18,7 @@ Both methods rely on a central configuration file (`server_config.json`) to defi
 *   PowerShell scripts for easy registration, starting, stopping, status checking, and uninstallation of all configured services.
 *   A Python GUI application for visual status display, service control (start/stop individual or all), and configuration editing.
 *   **Programmable Startup Delay (GUI):** Services can be configured with a startup delay. The GUI application will attempt to start these services automatically after the specified delay (in seconds) from when the GUI itself launches, provided the service is currently stopped. This is useful for staggering the startup of multiple resource-intensive services.
+*   **Auto-detect Application Paths (GUI):** The GUI's configuration editor can attempt to automatically locate application paths based on a specified TERA server base directory and predefined search cues.
 *   Centralized configuration via a single JSON file (`server_config.json`) detailing which existing applications to manage.
 
 ## 3. File Structure
@@ -47,11 +48,13 @@ WindowsAppLauncher/
 ├── python_gui/                     # Python GUI application files
 │   ├── main_gui.py                 # Main Python GUI application script
 │   ├── service_utils.py            # Utility functions for Python GUI (service interaction, config)
+│   ├── service_path_cues.py        # Definitions for auto-detecting paths
+│   ├── requirements.txt            # Python dependencies for the GUI (NEW)
 │   └── test_service_utils.py       # Unit tests for service_utils.py
 ├── server_config.template.json     # Template for the configuration file
 └── README.md                       # This documentation file
 ```
-*(Note: The `python_gui/` directory is a conceptual grouping; `main_gui.py` and `service_utils.py` might be in the root or a different structure as per your setup. Adjust paths accordingly.)*
+*(Note: The `python_gui/` directory is a conceptual grouping; scripts might be in the root or a different structure as per your setup. Adjust paths accordingly.)*
 
 ## 4. Prerequisites - General
 
@@ -74,7 +77,7 @@ Copy all the files and folders of this management system (maintaining the struct
 
     **Fields for each application object:**
     *   `FriendlyName` (string): A human-readable name for the application (e.g., "My Awesome App"). Used in logs and the UI.
-    *   `AppPath` (string): The **full and absolute path** to your **pre-existing** `.bat` or `.exe` application file (e.g., `C:\MyExistingApps\start_my_app.bat` or `D:\MyLegacyApp\run.exe`). **This is crucial and must point to an application file already on your disk.** Use double backslashes in JSON (e.g., `C:\\Path\\To\\Your\\ExistingApp.exe`).
+    *   `AppPath` (string): The **full and absolute path** to your **pre-existing** `.bat` or `.exe` application file (e.g., `C:\MyExistingApps\start_my_app.bat` or `D:\MyLegacyApp\run.exe`). **This is crucial and must point to an application file already on your disk.** Use double backslashes in JSON (e.g., `C:\\Path\\To\\Your\\ExistingApp.exe`). Can also be auto-detected by the GUI (see Section 8).
     *   `AppArguments` (string, optional): Any command-line arguments to pass to your application. If none, use an empty string `""`.
     *   `LogDirectory` (string): The **full and absolute path** to the directory where this managed application's console output log files will be stored (e.g., `C:\AppLauncherLogs\MyAwesomeAppLogs`). The launcher scripts will create this directory if it doesn't exist. Use double backslashes in JSON.
     *   `ServiceName` (string): A unique name for the Windows service that will wrap your application (e.g., `MyAwesomeAppSvc`). Must not contain spaces or special characters. Keep it short and descriptive.
@@ -156,18 +159,21 @@ This stops and removes the Windows Service wrappers. It **does not** uninstall y
 
 ## 8. Windows Service Manager GUI (Python)
 
-In addition to the PowerShell scripts, a Python-based GUI application is available for managing and monitoring your services.
+In addition to the PowerShell scripts, a Python-based GUI application is available for managing and monitoring your services. To simplify initial setup, the Configuration Editor within the GUI includes a feature to auto-detect application paths based on a specified base server directory and common TERA file structures.
 
 ### Prerequisites (for GUI)
 *   Python 3.x installed (e.g., Python 3.7 or newer).
-*   The following Python libraries are required:
-    *   `PyQt6` (for the graphical interface)
-    *   `psutil` (for service and process information)
-*   Installation via pip: `pip install PyQt6 psutil`
+*   **Python Dependencies:**
+    *   The required Python libraries are listed in `python_gui/requirements.txt`.
+    *   To install them, navigate to the project's root directory in your terminal and run:
+        ```bash
+        pip install -r python_gui/requirements.txt
+        ```
+    *   This will install `PyQt6` (for the graphical interface) and `psutil` (for service and process information).
 *   The `server_config.json` file should be configured as described in the main "Setup and Configuration (Shared)" section.
-*   The `service_utils.py` script must be in the same directory as `main_gui.py` or accessible via the Python path.
+*   The `service_utils.py` and `service_path_cues.py` scripts must be in the same directory as `main_gui.py` or accessible via the Python path.
 
-***Note:** If you are using a pre-packaged version of the GUI (e.g., `ServiceManagerGUI.exe`), you do **not** need to install Python or the libraries listed above separately.*
+***Note:** If you are using a pre-packaged version of the GUI (e.g., `ServiceManagerGUI.exe`), you do **not** need to install Python or the dependencies listed in `requirements.txt` separately.*
 
 ### Running the GUI Application
 
@@ -180,8 +186,8 @@ If a packaged version (e.g., `ServiceManagerGUI.exe`) is available:
 3.  Simply double-click `ServiceManagerGUI.exe` to run it.
 
 #### B. Running from Source (For development or if no packaged version is available)
-1.  Ensure all prerequisites listed above are met (Python, PyQt6, psutil).
-2.  Navigate to the project's root directory (or the directory containing `main_gui.py` and `service_utils.py`, e.g., `cd C:\Tools\WindowsAppLauncher\python_gui` or `cd C:\Tools\WindowsAppLauncher` if they are in root).
+1.  Ensure all prerequisites listed above are met (Python, and dependencies installed via `requirements.txt`).
+2.  Navigate to the project's root directory (or the directory containing `main_gui.py`, `service_utils.py`, and `service_path_cues.py` e.g., `cd C:\Tools\WindowsAppLauncher\python_gui` or `cd C:\Tools\WindowsAppLauncher` if they are in root).
 3.  Run the command: `python main_gui.py`
     *(If your python executable is named `python3`, use that instead).*
 
@@ -206,9 +212,18 @@ If a packaged version (e.g., `ServiceManagerGUI.exe`) is available:
 *   Feedback on these actions is provided via message boxes and status bar updates.
 
 #### Configuration Editor (`Edit Configurations...` Dialog)
-*   Displays the current service configurations from `server_config.json` in a table.
+This dialog allows you to manage the list of services and their properties. Key features include:
+*   **TERA Server Base Directory Input:**
+    *   A field to specify the main root directory where your TERA server files are located.
+    *   A 'Browse...' button is provided to help select this directory.
+*   **Auto-detect App Paths Button:**
+    *   After setting the 'TERA Server Base Directory', click this button to let the application attempt to automatically find the `AppPath` for each service listed in the configuration.
+    *   The detection uses a predefined set of common folder names (e.g., `hub`, `Executable/Bin`) and filename patterns (e.g., `Start.bat`, `*.ServiceName.bat`, `ServiceName.exe`) relevant to TERA server setups, defined in `service_path_cues.py`.
+    *   A summary message will report how many paths were found and which services (if any) still require manual path configuration.
+    *   Users should review the automatically detected paths for accuracy.
+*   **Service Configuration Table:** Displays the current service configurations (Friendly Name, Service Name, Application Path).
 *   **"Add..."**: Opens a dialog to add a new service configuration.
-    *   Fields: Friendly Name, Service Name, Application Path (with "Browse..." file picker for `.exe`/`.bat`), Application Arguments, Log Directory (with "Browse..." directory picker), `Startup Delay (seconds)` (Optional: Number of seconds to wait after the GUI application launches before attempting to automatically start this service. This only applies if the service is initially stopped. Set to 0 for no automatic delayed start).
+    *   Fields: Friendly Name, Service Name, Application Path (can be filled manually, via its own "Browse..." file picker, or by the "Auto-detect App Paths" feature above), Application Arguments, Log Directory (with "Browse..." directory picker), `Startup Delay (seconds)` (Optional: Number of seconds to wait after the GUI application launches before attempting to automatically start this service. This only applies if the service is initially stopped. Set to 0 for no automatic delayed start).
     *   Input validation is performed (e.g., required fields, Service Name format).
 *   **"Edit..."**: Opens the same dialog populated with the selected service's data for modification. The Service Name field is read-only during edit mode, as it's the primary identifier.
 *   **"Remove"**: Removes the selected service configuration from the list (after a confirmation dialog).
@@ -231,8 +246,8 @@ If a packaged version (e.g., `ServiceManagerGUI.exe`) is available:
 *   **Administrator Privileges:** Ensure you are running scripts or the GUI (if performing actions like start/stop/edit config) with sufficient privileges.
 *   **Script Parameters (PowerShell):** If you've changed the folder structure of this management system, ensure you are providing the correct paths to dependent scripts/files when calling `Install-ServerParts.ps1` or `Start-StatusWebServer.ps1`.
 *   **Python GUI Issues:**
-    *   Ensure Python and required libraries (`PyQt6`, `psutil`) are installed correctly.
-    *   Verify `main_gui.py` and `service_utils.py` are in the expected locations relative to each other and `server_config.json`.
+    *   Ensure Python is installed and the required dependencies are installed using `pip install -r python_gui/requirements.txt`.
+    *   Verify `main_gui.py`, `service_utils.py`, and `service_path_cues.py` are in the expected locations relative to each other and `server_config.json`.
     *   If the GUI doesn't load or show data: Check the console output when running `python main_gui.py` for errors.
 *   **Web Dashboard Issues:** If the web dashboard doesn't load or show data:
     *   Ensure `Start-StatusWebServer.ps1` is running and didn't report errors on startup.

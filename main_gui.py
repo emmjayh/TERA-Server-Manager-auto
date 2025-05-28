@@ -4,6 +4,7 @@
 
 import sys
 import os
+import glob # For path detection
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QTableWidget, QTableWidgetItem,
     QVBoxLayout, QWidget, QPushButton, QHeaderView, QMenuBar, QMenu,
@@ -21,6 +22,15 @@ try:
 except ImportError:
     print("Error: service_utils.py not found. Please ensure it's in the same directory or PYTHONPATH.")
     sys.exit(1) # Exit if crucial utilities are missing
+
+# Attempt to import SERVICE_PATH_CUES
+try:
+    from service_path_cues import SERVICE_PATH_CUES
+except ImportError:
+    print("Error: service_path_cues.py not found. Please ensure it's in the same directory or PYTHONPATH.")
+    # Optionally, provide a default empty list or handle this more gracefully
+    SERVICE_PATH_CUES = [] 
+    # sys.exit(1) # Or exit if this is critical
 
 # --- Configuration ---
 CONFIG_FILE_PATH = "server_config.json" # Relative to where main_gui.py is run
@@ -159,7 +169,7 @@ class ConfigEditDialog(QDialog):
         self.config_data = [dict(item) for item in current_config_data] 
         
         self.setWindowTitle("Edit Service Configurations")
-        self.setGeometry(150, 150, 700, 500)
+        self.setGeometry(150, 150, 750, 550) # Slightly wider for base dir
         
         self._init_ui()
         self._populate_config_table()
@@ -168,6 +178,19 @@ class ConfigEditDialog(QDialog):
     def _init_ui(self):
         main_layout = QVBoxLayout(self)
 
+        # Base Directory Layout
+        base_dir_layout = QHBoxLayout()
+        self.base_dir_label = QLabel("TERA Server Base Directory:")
+        self.base_dir_edit = QLineEdit()
+        self.base_dir_browse_button = QPushButton("Browse...")
+        self.base_dir_browse_button.clicked.connect(self._browse_base_dir)
+        
+        base_dir_layout.addWidget(self.base_dir_label)
+        base_dir_layout.addWidget(self.base_dir_edit)
+        base_dir_layout.addWidget(self.base_dir_browse_button)
+        main_layout.addLayout(base_dir_layout)
+
+        # Table for Configurations
         self.config_table = QTableWidget()
         self.config_table.setColumnCount(3)
         self.config_table.setHorizontalHeaderLabels(["Friendly Name", "Service Name", "Application Path"])
@@ -183,6 +206,7 @@ class ConfigEditDialog(QDialog):
         
         main_layout.addWidget(self.config_table)
 
+        # Buttons Layout (Add, Edit, Remove, Auto-detect)
         crud_buttons_layout = QHBoxLayout()
         self.add_button = QPushButton("Add...")
         self.add_button.clicked.connect(self._add_service)
@@ -194,9 +218,15 @@ class ConfigEditDialog(QDialog):
         crud_buttons_layout.addWidget(self.add_button)
         crud_buttons_layout.addWidget(self.edit_button)
         crud_buttons_layout.addWidget(self.remove_button)
-        crud_buttons_layout.addStretch()
+        crud_buttons_layout.addStretch() 
+
+        self.auto_detect_button = QPushButton("Auto-detect App Paths")
+        self.auto_detect_button.clicked.connect(self._auto_detect_paths)
+        crud_buttons_layout.addWidget(self.auto_detect_button) # Added here
+
         main_layout.addLayout(crud_buttons_layout)
 
+        # Main Action Buttons Layout (Save, Cancel)
         action_buttons_layout = QHBoxLayout()
         action_buttons_layout.addStretch()
         self.save_button = QPushButton("Save Changes")
@@ -207,6 +237,75 @@ class ConfigEditDialog(QDialog):
         action_buttons_layout.addWidget(self.save_button)
         action_buttons_layout.addWidget(self.cancel_button)
         main_layout.addLayout(action_buttons_layout)
+
+    def _browse_base_dir(self):
+        dirPath = QFileDialog.getExistingDirectory(self, "Select TERA Server Base Directory")
+        if dirPath:
+            self.base_dir_edit.setText(dirPath)
+
+    def _auto_detect_paths(self):
+        base_directory = self.base_dir_edit.text().strip()
+        if not base_directory or not os.path.isdir(base_directory):
+            QMessageBox.warning(self, "Warning", "Please select a valid TERA Server Base Directory first.")
+            return
+
+        if not SERVICE_PATH_CUES:
+            QMessageBox.warning(self, "Warning", "Service path cues are not loaded. Cannot auto-detect.")
+            return
+
+        found_count = 0
+        not_found_services = []
+        # Create a quick lookup map from ServiceName to its cues
+        service_name_to_cues = {item["ServiceName"]: item["SearchCues"] for item in SERVICE_PATH_CUES}
+
+        for service_entry in self.config_data:
+            service_name = service_entry.get("ServiceName")
+            if not service_name:
+                continue # Skip if service entry has no name
+
+            cues = service_name_to_cues.get(service_name)
+            if not cues:
+                not_found_services.append(service_name)
+                continue
+
+            path_found_for_this_service = False
+            for cue in cues:
+                sub_dir = cue.get("sub_dir", "")
+                filename_pattern = cue["filename_pattern"]
+                
+                # Construct search path
+                # Patterns are expected to be specific, e.g., "HubServer.bat" or "*. HubServer.bat"
+                # No further {ServiceName} placeholder replacement needed here based on prior design
+                current_search_path = os.path.join(base_directory, sub_dir, filename_pattern)
+                
+                # Use glob to find matches
+                matches = glob.glob(current_search_path)
+                if matches:
+                    # Take the first match, normalize path
+                    service_entry["AppPath"] = os.path.normpath(matches[0])
+                    found_count += 1
+                    path_found_for_this_service = True
+                    break # Move to the next service in self.config_data
+            
+            if not path_found_for_this_service:
+                not_found_services.append(service_name)
+        
+        self._populate_config_table() # Refresh the table to show updated paths
+
+        message = f"Path detection complete.\n\nFound paths for {found_count} service(s).\n"
+        if not_found_services:
+            message += f"\nCould not automatically find paths for: {', '.join(not_found_services)}.\nPlease set them manually or verify cues."
+        else:
+            if found_count > 0: # Only say all found if some were actually processed
+                 message += "\nAll configured services with defined cues appear to have paths found."
+            elif not self.config_data:
+                 message += "\nNo services configured to detect paths for."
+            else: # Config data exists, but maybe no cues for any of them
+                 message += "\nNo paths were found, possibly due to missing cues or incorrect base directory."
+
+
+        QMessageBox.information(self, "Auto-detect Paths Result", message)
+
 
     def _populate_config_table(self):
         self.config_table.clearContents()
@@ -315,7 +414,7 @@ class MainWindow(QMainWindow):
         actions_menu.addAction(stop_all_action)
 
 
-        self.statusBar = QStatusBar() # Correctly initialized here
+        self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
         self.statusBar.showMessage("Ready")
 
