@@ -6,7 +6,7 @@ The Windows App Launcher and Service Manager is a suite of tools designed to man
 
 This system provides two primary methods for management:
 1.  A comprehensive set of **PowerShell scripts** for command-line based registration, control, and status checking.
-2.  A **Python-based Graphical User Interface (GUI)** for visual monitoring and management of the services.
+2.  A **Python-based Graphical User Interface (GUI)** using Tkinter/CustomTkinter for visual monitoring and management of the services.
 
 Both methods rely on a central configuration file (`server_config.json`) to define the applications to be managed.
 
@@ -16,8 +16,8 @@ Both methods rely on a central configuration file (`server_config.json`) to defi
 *   Automatic restart on application/service failure (configured via standard Windows Service recovery options once registered).
 *   Individual, timestamped log files for each managed application's console output (stdout and stderr).
 *   PowerShell scripts for easy registration, starting, stopping, status checking, and uninstallation of all configured services.
-*   A Python GUI application for visual status display, service control (start/stop individual or all), and configuration editing.
-*   **Programmable Startup Delay (GUI):** Services can be configured with a startup delay. The GUI application will attempt to start these services automatically after the specified delay (in seconds) from when the GUI itself launches, provided the service is currently stopped. This is useful for staggering the startup of multiple resource-intensive services.
+*   A Python GUI application (Tkinter/CustomTkinter) for visual status display, service control (start/stop individual or all), and configuration editing.
+*   **Programmable Startup Delay (GUI):** Services can be configured with a startup delay. The GUI application will attempt to start these services automatically after the specified delay (in seconds) from when the GUI itself launches, provided the service is currently stopped.
 *   **Auto-detect Application Paths (GUI):** The GUI's configuration editor can attempt to automatically locate application paths based on a specified TERA server base directory and predefined search cues.
 *   Centralized configuration via a single JSON file (`server_config.json`) detailing which existing applications to manage.
 
@@ -36,9 +36,9 @@ WindowsAppLauncher/
 │   ├── Stop-AllServerParts.ps1     # Stops all configured services
 │   ├── Get-ServerPartStatus.ps1    # Gets status for CLI or web UI
 │   └── Uninstall-ServerParts.ps1   # Stops and removes all configured services
-├── web_frontend/
-│   ├── status_dashboard.html       # The HTML, CSS, and JS for the (optional) web UI
-│   └── Start-StatusWebServer.ps1   # Script to start the web server for the UI
+├── web_frontend/  (Optional - for PowerShell Web Dashboard)
+│   ├── status_dashboard.html
+│   └── Start-StatusWebServer.ps1
 ├── test_apps/                      # Dummy applications for testing
 │   ├── continuous_loop.bat
 │   ├── quick_exit.bat
@@ -46,21 +46,20 @@ WindowsAppLauncher/
 │   ├── dummy_app.cs
 │   └── dummy_app.exe               # (Compiled from dummy_app.cs)
 ├── python_gui/                     # Python GUI application files
-│   ├── main_gui.py                 # Main Python GUI application script
+│   ├── app_tk.py                   # Main Python GUI application script (Tkinter/CustomTkinter)
 │   ├── service_utils.py            # Utility functions for Python GUI (service interaction, config)
 │   ├── service_path_cues.py        # Definitions for auto-detecting paths
-│   ├── requirements.txt            # Python dependencies for the GUI (NEW)
+│   ├── requirements.txt            # Python dependencies for the GUI
 │   └── test_service_utils.py       # Unit tests for service_utils.py
 ├── server_config.template.json     # Template for the configuration file
 └── README.md                       # This documentation file
 ```
-*(Note: The `python_gui/` directory is a conceptual grouping; scripts might be in the root or a different structure as per your setup. Adjust paths accordingly.)*
 
 ## 4. Prerequisites - General
 
 *   **Operating System:** Windows 10 / Windows Server 2016 or later.
 *   **User's Applications:** The actual `.bat` or `.exe` files you wish to manage must already be present on your system at known locations. This system *does not* install your application software.
-*   **Administrative Privileges:** Required for registering, starting, stopping, and uninstalling Windows services, and for running the web server or GUI on some ports or network configurations.
+*   **Administrative Privileges:** Required for registering, starting, stopping, and uninstalling Windows services (via PowerShell scripts or the GUI performing these actions).
 
 ## 5. Prerequisites - PowerShell Management
 
@@ -72,16 +71,16 @@ WindowsAppLauncher/
 Copy all the files and folders of this management system (maintaining the structure above) to a directory on your Windows server (e.g., `C:\Tools\WindowsAppLauncher`).
 
 ### Configure `server_config.json`
-1.  Copy `server_config.template.json` and rename it to `server_config.json` in the root directory of the management system (or a designated configuration directory).
+1.  Copy `server_config.template.json` and rename it to `server_config.json` in the root directory of the management system.
 2.  Edit `server_config.json` to define the existing applications you want to manage as services. It's a JSON array of objects, where each object represents an application to be managed.
 
     **Fields for each application object:**
-    *   `FriendlyName` (string): A human-readable name for the application (e.g., "My Awesome App"). Used in logs and the UI.
-    *   `AppPath` (string): The **full and absolute path** to your **pre-existing** `.bat` or `.exe` application file (e.g., `C:\MyExistingApps\start_my_app.bat` or `D:\MyLegacyApp\run.exe`). **This is crucial and must point to an application file already on your disk.** Use double backslashes in JSON (e.g., `C:\\Path\\To\\Your\\ExistingApp.exe`). Can also be auto-detected by the GUI (see Section 8).
-    *   `AppArguments` (string, optional): Any command-line arguments to pass to your application. If none, use an empty string `""`.
-    *   `LogDirectory` (string): The **full and absolute path** to the directory where this managed application's console output log files will be stored (e.g., `C:\AppLauncherLogs\MyAwesomeAppLogs`). The launcher scripts will create this directory if it doesn't exist. Use double backslashes in JSON.
-    *   `ServiceName` (string): A unique name for the Windows service that will wrap your application (e.g., `MyAwesomeAppSvc`). Must not contain spaces or special characters. Keep it short and descriptive.
-    *   `StartupDelaySeconds` (integer, optional): If greater than 0, the Python GUI application will wait this many seconds after its own launch before attempting to start this service, but only if the service is found to be in a "stopped" state. Defaults to 0 (no automatic delayed start by the GUI) if omitted. This setting is primarily used by the Python GUI.
+    *   `FriendlyName` (string): A human-readable name for the application.
+    *   `AppPath` (string): The **full and absolute path** to your **pre-existing** `.bat` or `.exe` application file. Use double backslashes in JSON (e.g., `C:\\Path\\To\\Your\\ExistingApp.exe`). Can also be auto-detected by the Tkinter GUI.
+    *   `AppArguments` (string, optional): Any command-line arguments to pass to your application.
+    *   `LogDirectory` (string): The **full and absolute path** to the directory where this managed application's console output log files will be stored. Use double backslashes in JSON.
+    *   `ServiceName` (string): A unique name for the Windows service that will wrap your application. Must not contain spaces or special characters.
+    *   `StartupDelaySeconds` (integer, optional): If greater than 0, the Python GUI application will wait this many seconds after its own launch before attempting to start this service, but only if the service is found to be in a "stopped" state. Defaults to 0 if omitted.
 
     **Example `server_config.json` snippet:**
     ```json
@@ -104,23 +103,16 @@ Copy all the files and folders of this management system (maintaining the struct
     ]
     ```
 
-### Directory Paths in Scripts (Important Note)
-The PowerShell management scripts (`Install-ServerParts.ps1`, `Start-StatusWebServer.ps1`) require paths to their dependencies. If you maintain the documented folder structure, the example commands should work with relative paths. If you rearrange, you **must** provide correct full or relative paths.
-
 ## 7. PowerShell Script Management
 
-This section details how to manage services using the PowerShell scripts.
+This section details how to manage services using the PowerShell scripts. The `server_config.json` should be in the root project directory when running these scripts.
 
 ### Registering Applications as Services
 (Requires Admin privileges)
-To take your existing applications (defined in `server_config.json`) and register them as Windows services:
-1.  Open PowerShell as **Administrator**.
-2.  Navigate to the root directory (e.g., `cd C:\Tools\WindowsAppLauncher`).
-3.  Run:
-    ```powershell
-    .\scripts\Install-ServerParts.ps1 -ConfigFilePath ".\server_config.json" -LauncherScriptDirectory ".\scripts" -ServiceScriptPath ".\scripts\New-AppWindowsService.ps1"
-    ```
-    This **does not install your application software**. It creates Windows Service wrappers for your existing applications.
+```powershell
+# Navigate to project root
+.\scripts\Install-ServerParts.ps1 -ConfigFilePath ".\server_config.json" -LauncherScriptDirectory ".\scripts" -ServiceScriptPath ".\scripts\New-AppWindowsService.ps1"
+```
 
 ### Starting All Registered Services
 (Requires Admin privileges)
@@ -134,32 +126,20 @@ To take your existing applications (defined in `server_config.json`) and registe
 .\scripts\Stop-AllServerParts.ps1 -ConfigFilePath ".\server_config.json"
 ```
 
-### Checking Status of Managed Applications (Command Line)
+### Checking Status (Command Line)
 ```powershell
 .\scripts\Get-ServerPartStatus.ps1 -ConfigFilePath ".\server_config.json"
 ```
-To output as JSON:
-```powershell
-.\scripts\Get-ServerPartStatus.ps1 -ConfigFilePath ".\server_config.json" -OutputToJson
-```
-
-### Web Dashboard for Managed Applications (Optional)
-1.  Start the Web Server (May require Admin privileges):
-    ```powershell
-    .\web_frontend\Start-StatusWebServer.ps1 -ConfigFilePath ".\server_config.json" -GetStatusScriptPath ".\scripts\Get-ServerPartStatus.ps1" -HtmlFilePath ".\web_frontend\status_dashboard.html"
-    ```
-2.  Access: `http://localhost:8088` (or your configured port).
 
 ### Uninstalling (Unregistering) Services
 (Requires Admin privileges)
-This stops and removes the Windows Service wrappers. It **does not** uninstall your actual application software.
 ```powershell
 .\scripts\Uninstall-ServerParts.ps1 -ConfigFilePath ".\server_config.json"
 ```
 
-## 8. Windows Service Manager GUI (Python)
+## 8. Windows Service Manager GUI (Tkinter/CustomTkinter)
 
-In addition to the PowerShell scripts, a Python-based GUI application is available for managing and monitoring your services. To simplify initial setup, the Configuration Editor within the GUI includes a feature to auto-detect application paths based on a specified base server directory and common TERA file structures.
+The Python-based GUI provides a visual way to monitor and manage services.
 
 ### Prerequisites (for GUI)
 *   Python 3.x installed (e.g., Python 3.7 or newer).
@@ -169,89 +149,107 @@ In addition to the PowerShell scripts, a Python-based GUI application is availab
         ```bash
         pip install -r python_gui/requirements.txt
         ```
-    *   This will install `PyQt6` (for the graphical interface) and `psutil` (for service and process information).
-*   The `server_config.json` file should be configured as described in the main "Setup and Configuration (Shared)" section.
-*   The `service_utils.py` and `service_path_cues.py` scripts must be in the same directory as `main_gui.py` or accessible via the Python path.
+    *   This will install `customtkinter` and `psutil`.
+*   The `server_config.json` file (in the project root) should be configured.
+*   The `service_utils.py` and `service_path_cues.py` scripts must be in the `python_gui` directory.
 
-***Note:** If you are using a pre-packaged version of the GUI (e.g., `ServiceManagerGUI.exe`), you do **not** need to install Python or the dependencies listed in `requirements.txt` separately.*
+***Note:** If using a pre-packaged version of the GUI (e.g., `ServiceManagerGUI_TK.exe`), Python and the above dependencies do not need separate installation.*
 
 ### Running the GUI Application
 
-There are two ways to run the GUI application:
-
-#### A. Running the Packaged GUI Application (Recommended for most users)
-If a packaged version (e.g., `ServiceManagerGUI.exe`) is available:
-1.  Ensure the executable (`ServiceManagerGUI.exe`) is in a dedicated folder (e.g., `C:\Tools\WindowsAppLauncher\gui_dist\`).
-2.  Place your `server_config.json` file in the **same directory** as `ServiceManagerGUI.exe`.
-3.  Simply double-click `ServiceManagerGUI.exe` to run it.
-
-#### B. Running from Source (For development or if no packaged version is available)
-1.  Ensure all prerequisites listed above are met (Python, and dependencies installed via `requirements.txt`).
-2.  Navigate to the project's root directory (or the directory containing `main_gui.py`, `service_utils.py`, and `service_path_cues.py` e.g., `cd C:\Tools\WindowsAppLauncher\python_gui` or `cd C:\Tools\WindowsAppLauncher` if they are in root).
-3.  Run the command: `python main_gui.py`
+#### A. Running from Source (Recommended for development)
+1.  Ensure all prerequisites listed above are met.
+2.  Navigate to the project's root directory (e.g., `C:\Tools\WindowsAppLauncher`).
+3.  Run the command:
+    ```bash
+    python python_gui/app_tk.py
+    ```
     *(If your python executable is named `python3`, use that instead).*
+
+#### B. Running the Packaged GUI Application
+If a packaged version (e.g., `ServiceManagerGUI_TK.exe`) is available:
+1.  Place the executable (e.g., `ServiceManagerGUI_TK.exe`) in a dedicated folder.
+2.  Place your `server_config.json` file in the **same directory** as the executable.
+3.  Double-click the executable to run it.
 
 ### GUI Features
 
 #### Main Window
-*   Displays a table of all configured services with their Friendly Name, Service Name, current Status (e.g., Running, Stopped, Not Found), and Process ID (PID).
-*   Status is color-coded for quick visual identification (e.g., green for running, red for stopped).
-*   The status display auto-refreshes every 10 seconds (or the configured interval).
-*   A "Refresh Status" button allows for immediate manual refresh.
+*   **Service List:** Displays a scrollable list of all configured services. Each row shows:
+    *   Friendly Name
+    *   Service Name
+    *   Current Status (e.g., Running, Stopped, Not Found) - Color-coded for readability.
+    *   Process ID (PID) if running.
+    *   **Actions Column:** Contains "Start" and "Stop" buttons for each individual service. These buttons are enabled/disabled based on the current service status.
+*   **Status Bar:** Located at the bottom, displays messages about ongoing operations or errors.
+*   **Control Buttons:**
+    *   **"Edit Configurations"**: Opens the Configuration Editor window.
+    *   **"Start All Services"**: Attempts to start all services listed in the configuration that are currently stopped or not found.
+    *   **"Stop All Services"**: Attempts to stop all services listed in the configuration that are currently running or paused.
+    *   **"Refresh Status"**: Manually reloads the status of all services.
+*   **Auto-Refresh:** The service list automatically refreshes every 10 seconds.
+*   **Delayed Startup:** On application launch (and after configuration changes), services configured with `StartupDelaySeconds > 0` in `server_config.json` will be automatically started after the specified delay if they are currently stopped.
 
-#### Menu Bar
-*   **File > Exit**: Closes the application.
-*   **Actions > Start All Services**: Attempts to start all configured services that are currently stopped or not found.
-*   **Actions > Stop All Services**: Attempts to stop all configured services that are currently running or paused.
-*   **Configuration > Edit Configurations...**: Opens the configuration editor dialog.
+#### Configuration Editor Window (`Edit Configurations...`)
+This modal dialog allows for managing the `server_config.json` file content:
+*   **TERA Server Base Directory:**
+    *   An input field and "Browse..." button to select the root directory of your TERA server installation. This path is used by the auto-detect feature.
+*   **"Auto-detect App Paths" Button:**
+    *   Uses the specified Base Directory and predefined cues (from `service_path_cues.py`) to automatically find and populate the "Application Path" for services in the list below.
+    *   Provides a summary of found/not found paths.
+*   **Service Configuration List:**
+    *   Displays the current services from the configuration in a simplified list (Friendly Name, Service Name, App Path).
+    *   Allows selection of a service to Edit or Remove.
+*   **Control Buttons:**
+    *   **"Add Service..."**: Opens the Add/Edit Service dialog to define a new service.
+    *   **"Edit Service..."**: Opens the Add/Edit Service dialog populated with data from the selected service.
+    *   **"Remove Service"**: Removes the selected service from the list (after confirmation).
+*   **"Save Changes" Button:** Saves the current state of the service list (additions, edits, removals) back to `server_config.json`.
+*   **"Cancel" Button:** Closes the Configuration Editor without saving changes.
 
-#### Service Controls (Main Window - Bottom Buttons)
-*   Select a service in the table to enable the "Start Service" and "Stop Service" buttons.
-*   **"Start Service"**: Attempts to start the selected service. Enabled if the service is currently stopped or reported as "Not Found".
-*   **"Stop Service"**: Attempts to stop the selected service. Enabled if the service is currently running or paused.
-*   Feedback on these actions is provided via message boxes and status bar updates.
+#### Add/Edit Service Dialog
+This modal dialog is used for adding a new service or editing an existing one:
+*   **Fields:**
+    *   Friendly Name
+    *   Service Name (read-only when editing)
+    *   Application Path (manual input or "Browse..." file picker)
+    *   Application Arguments (optional)
+    *   Log Directory (manual input or "Browse..." directory picker)
+    *   Startup Delay (seconds): Input for the delayed start feature (0-3600 seconds).
+*   **Validation:** Ensures required fields are filled and Service Name has valid characters. Checks for duplicate Service Names when adding.
+*   **"OK" Button:** Saves the new/edited service data and closes the dialog.
+*   **"Cancel" Button:** Closes the dialog without saving.
 
-#### Configuration Editor (`Edit Configurations...` Dialog)
-This dialog allows you to manage the list of services and their properties. Key features include:
-*   **TERA Server Base Directory Input:**
-    *   A field to specify the main root directory where your TERA server files are located.
-    *   A 'Browse...' button is provided to help select this directory.
-*   **Auto-detect App Paths Button:**
-    *   After setting the 'TERA Server Base Directory', click this button to let the application attempt to automatically find the `AppPath` for each service listed in the configuration.
-    *   The detection uses a predefined set of common folder names (e.g., `hub`, `Executable/Bin`) and filename patterns (e.g., `Start.bat`, `*.ServiceName.bat`, `ServiceName.exe`) relevant to TERA server setups, defined in `service_path_cues.py`.
-    *   A summary message will report how many paths were found and which services (if any) still require manual path configuration.
-    *   Users should review the automatically detected paths for accuracy.
-*   **Service Configuration Table:** Displays the current service configurations (Friendly Name, Service Name, Application Path).
-*   **"Add..."**: Opens a dialog to add a new service configuration.
-    *   Fields: Friendly Name, Service Name, Application Path (can be filled manually, via its own "Browse..." file picker, or by the "Auto-detect App Paths" feature above), Application Arguments, Log Directory (with "Browse..." directory picker), `Startup Delay (seconds)` (Optional: Number of seconds to wait after the GUI application launches before attempting to automatically start this service. This only applies if the service is initially stopped. Set to 0 for no automatic delayed start).
-    *   Input validation is performed (e.g., required fields, Service Name format).
-*   **"Edit..."**: Opens the same dialog populated with the selected service's data for modification. The Service Name field is read-only during edit mode, as it's the primary identifier.
-*   **"Remove"**: Removes the selected service configuration from the list (after a confirmation dialog).
-*   **"Save Changes"**: Saves all modifications (additions, edits, removals) back to the `server_config.json` file and closes the editor. The main window will then refresh its display.
-*   **"Cancel"**: Discards any changes made in the editor and closes it.
+### Packaging the GUI with PyInstaller (for distribution)
+To create a standalone executable from the Python GUI scripts:
+1.  Ensure PyInstaller is installed: `pip install pyinstaller`.
+2.  Navigate to the project's root directory (`WindowsAppLauncher`).
+3.  Run a command similar to the following:
+    ```bash
+    pyinstaller --name ServiceManagerGUI_TK --onefile --windowed --add-data "python_gui/service_path_cues.py:python_gui" python_gui/app_tk.py
+    ```
+    *   `--name ServiceManagerGUI_TK`: Name of the output executable.
+    *   `--onefile`: Bundles everything into a single `.exe`.
+    *   `--windowed`: Prevents a console window from appearing.
+    *   `--add-data "python_gui/service_path_cues.py:python_gui"`: Ensures `service_path_cues.py` is included. The part after the colon (`:`) specifies the destination folder within the bundle (here, a `python_gui` folder). If `service_utils.py` is not automatically detected due to how it's imported by `app_tk.py` (though direct imports are usually fine), it might also need an `--add-data` flag.
+    *   `python_gui/app_tk.py`: The main script for the GUI.
+4.  The executable will be found in the `dist/` folder.
+5.  Distribute the generated `.exe` file along with `server_config.json` (placed in the same directory as the `.exe`). CustomTkinter themes or assets, if non-default ones were used, might also need to be bundled using `--add-data`.
 
 ## 9. Logging (Shared)
 
-*   **Application Logs:** The stdout and stderr output of each launched application (that you've configured to be managed) are redirected to `.log` files. These are stored in the directory specified by the `LogDirectory` field in `server_config.json` for that application, with a timestamp in the filename (e.g., `MyApplication_2023-10-27_14-30-00.log`).
-*   **Service Events:** Standard Windows Service events (start, stop, failure, recovery actions for the service wrappers) are logged to the Windows Event Log (typically under `System` or `Application`). Use `Event Viewer` (eventvwr.msc) to view these.
-*   **Management Script Output (PowerShell):** The PowerShell management scripts write their output to the console. This can be redirected to a file if needed (e.g., `.\scripts\Install-ServerParts.ps1 ... > registration.log`).
-*   **GUI Feedback:** Error messages or operational feedback from Python GUI actions are typically displayed in message boxes or the status bar.
+*   **Application Logs:** Output from managed `.bat` or `.exe` applications is redirected to log files in the `LogDirectory` specified in `server_config.json`.
+*   **Service Events:** Windows Service events are logged in the Windows Event Log.
+*   **PowerShell Script Output:** PowerShell scripts output to the console.
+*   **GUI Feedback:** The Python GUI provides feedback via its status bar and message boxes.
 
 ## 10. Troubleshooting
 
-*   **Paths:** Double-check that all paths in `server_config.json` (especially `AppPath` for your existing application and `LogDirectory`) are **full, absolute, and correct**. Remember to use double backslashes (`\\`) for paths in JSON. `AppPath` must point to an executable or batch file that is already on your system.
-*   **Application Logs:** Examine the log files in the configured `LogDirectory` for your specific application. These logs contain the direct output from your `.bat` or `.exe` and will show any errors it reported when launched by the service.
-*   **Services MMC:** Open the Services console (`services.msc`) to check the status of your registered service wrappers, their configuration (Log On As, Startup Type, Recovery settings), and dependencies.
-*   **Windows Event Viewer:** Look in `Windows Logs > System` and `Windows Logs > Application` in Event Viewer for errors related to your service names.
-*   **Administrator Privileges:** Ensure you are running scripts or the GUI (if performing actions like start/stop/edit config) with sufficient privileges.
-*   **Script Parameters (PowerShell):** If you've changed the folder structure of this management system, ensure you are providing the correct paths to dependent scripts/files when calling `Install-ServerParts.ps1` or `Start-StatusWebServer.ps1`.
-*   **Python GUI Issues:**
-    *   Ensure Python is installed and the required dependencies are installed using `pip install -r python_gui/requirements.txt`.
-    *   Verify `main_gui.py`, `service_utils.py`, and `service_path_cues.py` are in the expected locations relative to each other and `server_config.json`.
-    *   If the GUI doesn't load or show data: Check the console output when running `python main_gui.py` for errors.
-*   **Web Dashboard Issues:** If the web dashboard doesn't load or show data:
-    *   Ensure `Start-StatusWebServer.ps1` is running and didn't report errors on startup.
-    *   Check the browser's developer console (usually F12) for JavaScript errors or network errors when trying to fetch `/status`.
-    *   Verify `Get-ServerPartStatus.ps1` runs correctly on its own and produces valid JSON.
+*   **Paths in `server_config.json`:** Ensure `AppPath` and `LogDirectory` are full, absolute paths with double backslashes (`\\`).
+*   **Admin Privileges:** Required for service management (PowerShell or GUI actions).
+*   **Python GUI:**
+    *   Ensure Python and dependencies from `python_gui/requirements.txt` are installed.
+    *   Verify `app_tk.py`, `service_utils.py`, and `service_path_cues.py` are correctly located in the `python_gui` folder and `server_config.json` is in the project root when running from source.
+    *   Check console output for errors when running `python python_gui/app_tk.py`.
 
 ```
