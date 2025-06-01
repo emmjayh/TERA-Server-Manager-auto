@@ -29,7 +29,7 @@ try:
 except ImportError:
     print("Error: service_path_cues.py not found. Please ensure it's in the same directory or PYTHONPATH.")
     # Optionally, provide a default empty list or handle this more gracefully
-    SERVICE_PATH_CUES = [] 
+    SERVICE_PATH_CUES = []
     # sys.exit(1) # Or exit if this is critical
 
 # --- Configuration ---
@@ -40,21 +40,21 @@ REFRESH_INTERVAL_MS = 10000  # 10 seconds
 class AddEditServiceDialog(QDialog):
     def __init__(self, service_data=None, parent=None):
         super().__init__(parent)
-        self.service_data_in = service_data 
-        self.service_data_out = None 
+        self.service_data_in = service_data
+        self.service_data_out = None
         self.is_editing_mode = bool(service_data)
 
         if self.is_editing_mode:
             self.setWindowTitle("Edit Service Configuration")
         else:
             self.setWindowTitle("Add Service Configuration")
-        
+
         self.setMinimumWidth(450)
         self._init_ui()
 
         if self.is_editing_mode:
             self._populate_fields()
-            self.service_name_edit.setReadOnly(True) 
+            self.service_name_edit.setReadOnly(True)
 
     def _init_ui(self):
         layout = QVBoxLayout(self)
@@ -62,16 +62,16 @@ class AddEditServiceDialog(QDialog):
 
         self.friendly_name_edit = QLineEdit()
         self.service_name_edit = QLineEdit()
-        
+
         self.app_path_edit = QLineEdit()
         self.app_path_browse_button = QPushButton("Browse...")
         self.app_path_browse_button.clicked.connect(self._browse_app_path)
         app_path_layout = QHBoxLayout()
         app_path_layout.addWidget(self.app_path_edit)
         app_path_layout.addWidget(self.app_path_browse_button)
-        
+
         self.app_args_edit = QLineEdit()
-        
+
         self.log_dir_edit = QLineEdit()
         self.log_dir_browse_button = QPushButton("Browse...")
         self.log_dir_browse_button.clicked.connect(self._browse_log_dir)
@@ -82,7 +82,7 @@ class AddEditServiceDialog(QDialog):
         self.startup_delay_label = QLabel("Startup Delay (seconds):")
         self.startup_delay_spinbox = QSpinBox()
         self.startup_delay_spinbox.setMinimum(0)
-        self.startup_delay_spinbox.setMaximum(3600) 
+        self.startup_delay_spinbox.setMaximum(3600)
         self.startup_delay_spinbox.setValue(0)
 
         form_layout.addRow("Friendly Name:", self.friendly_name_edit)
@@ -91,13 +91,13 @@ class AddEditServiceDialog(QDialog):
         form_layout.addRow("Application Arguments:", self.app_args_edit)
         form_layout.addRow("Log Directory:", log_dir_layout)
         form_layout.addRow(self.startup_delay_label, self.startup_delay_spinbox)
-        
+
         layout.addLayout(form_layout)
 
         self.button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        self.button_box.accepted.connect(self.accept) 
+        self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
-        
+
         layout.addWidget(self.button_box)
 
     def _browse_app_path(self):
@@ -126,7 +126,7 @@ class AddEditServiceDialog(QDialog):
         service_name = self.service_name_edit.text().strip()
         app_path = self.app_path_edit.text().strip()
         log_dir = self.log_dir_edit.text().strip()
-        
+
         if not friendly_name:
             QMessageBox.warning(self, "Input Error", "Friendly Name cannot be empty.")
             return None
@@ -142,7 +142,7 @@ class AddEditServiceDialog(QDialog):
         if not log_dir:
             QMessageBox.warning(self, "Input Error", "Log Directory cannot be empty.")
             return None
-        
+
         data = {
             "FriendlyName": friendly_name,
             "ServiceName": service_name,
@@ -159,18 +159,18 @@ class AddEditServiceDialog(QDialog):
         validated_data = self._get_validated_data()
         if validated_data:
             self.service_data_out = validated_data
-            super().accept() 
+            super().accept()
         else:
             self.service_data_out = None
 
 class ConfigEditDialog(QDialog):
     def __init__(self, current_config_data, parent=None):
         super().__init__(parent)
-        self.config_data = [dict(item) for item in current_config_data] 
-        
+        self.config_data = [dict(item) for item in current_config_data]
+
         self.setWindowTitle("Edit Service Configurations")
         self.setGeometry(150, 150, 750, 550) # Slightly wider for base dir
-        
+
         self._init_ui()
         self._populate_config_table()
         self._update_button_states()
@@ -184,7 +184,7 @@ class ConfigEditDialog(QDialog):
         self.base_dir_edit = QLineEdit()
         self.base_dir_browse_button = QPushButton("Browse...")
         self.base_dir_browse_button.clicked.connect(self._browse_base_dir)
-        
+
         base_dir_layout.addWidget(self.base_dir_label)
         base_dir_layout.addWidget(self.base_dir_edit)
         base_dir_layout.addWidget(self.base_dir_browse_button)
@@ -198,12 +198,12 @@ class ConfigEditDialog(QDialog):
         self.config_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.config_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.config_table.itemSelectionChanged.connect(self._update_button_states)
-        
+
         header = self.config_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
-        
+
         main_layout.addWidget(self.config_table)
 
         # Buttons Layout (Add, Edit, Remove, Auto-detect)
@@ -214,11 +214,11 @@ class ConfigEditDialog(QDialog):
         self.edit_button.clicked.connect(self._edit_service)
         self.remove_button = QPushButton("Remove")
         self.remove_button.clicked.connect(self._remove_service)
-        
+
         crud_buttons_layout.addWidget(self.add_button)
         crud_buttons_layout.addWidget(self.edit_button)
         crud_buttons_layout.addWidget(self.remove_button)
-        crud_buttons_layout.addStretch() 
+        crud_buttons_layout.addStretch()
 
         self.auto_detect_button = QPushButton("Auto-detect App Paths")
         self.auto_detect_button.clicked.connect(self._auto_detect_paths)
@@ -233,7 +233,7 @@ class ConfigEditDialog(QDialog):
         self.save_button.clicked.connect(self._save_config_and_accept)
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.clicked.connect(self.reject)
-        
+
         action_buttons_layout.addWidget(self.save_button)
         action_buttons_layout.addWidget(self.cancel_button)
         main_layout.addLayout(action_buttons_layout)
@@ -272,12 +272,12 @@ class ConfigEditDialog(QDialog):
             for cue in cues:
                 sub_dir = cue.get("sub_dir", "")
                 filename_pattern = cue["filename_pattern"]
-                
+
                 # Construct search path
                 # Patterns are expected to be specific, e.g., "HubServer.bat" or "*. HubServer.bat"
                 # No further {ServiceName} placeholder replacement needed here based on prior design
                 current_search_path = os.path.join(base_directory, sub_dir, filename_pattern)
-                
+
                 # Use glob to find matches
                 matches = glob.glob(current_search_path)
                 if matches:
@@ -286,10 +286,10 @@ class ConfigEditDialog(QDialog):
                     found_count += 1
                     path_found_for_this_service = True
                     break # Move to the next service in self.config_data
-            
+
             if not path_found_for_this_service:
                 not_found_services.append(service_name)
-        
+
         self._populate_config_table() # Refresh the table to show updated paths
 
         message = f"Path detection complete.\n\nFound paths for {found_count} service(s).\n"
@@ -328,10 +328,10 @@ class ConfigEditDialog(QDialog):
             if new_service_data:
                 existing_service_names = [s.get("ServiceName", "").lower() for s in self.config_data]
                 if new_service_data["ServiceName"].lower() in existing_service_names:
-                    QMessageBox.warning(self, "Duplicate Service", 
+                    QMessageBox.warning(self, "Duplicate Service",
                                         f"A service with the name '{new_service_data['ServiceName']}' already exists.")
                     return
-                
+
                 self.config_data.append(new_service_data)
                 self._populate_config_table()
 
@@ -339,7 +339,7 @@ class ConfigEditDialog(QDialog):
         selected_rows = self.config_table.selectionModel().selectedRows()
         if not selected_rows:
             return
-        
+
         selected_row_index = selected_rows[0].row()
         service_to_edit = self.config_data[selected_row_index]
 
@@ -354,22 +354,22 @@ class ConfigEditDialog(QDialog):
         selected_rows = self.config_table.selectionModel().selectedRows()
         if not selected_rows:
             return
-        
+
         selected_row_index = selected_rows[0].row()
         service_name_to_remove = self.config_data[selected_row_index].get("ServiceName", "Unknown Service")
 
-        reply = QMessageBox.question(self, "Confirm Remove", 
+        reply = QMessageBox.question(self, "Confirm Remove",
                                      f"Are you sure you want to remove service '{service_name_to_remove}'?",
                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                      QMessageBox.StandardButton.No)
-        
+
         if reply == QMessageBox.StandardButton.Yes:
             del self.config_data[selected_row_index]
             self._populate_config_table()
 
     def _save_config_and_accept(self):
         if service_utils.save_config(CONFIG_FILE_PATH, self.config_data):
-            self.accept() 
+            self.accept()
         else:
             QMessageBox.critical(self, "Error", f"Failed to save configuration to '{CONFIG_FILE_PATH}'.")
 
@@ -382,18 +382,18 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, 800, 600)
 
         self._init_ui()
-        self._load_and_display_statuses() 
+        self._load_and_display_statuses()
 
         self.timer = QTimer()
         self.timer.timeout.connect(self._load_and_display_statuses)
         self.timer.start(REFRESH_INTERVAL_MS)
-        
+
         self._schedule_initial_delayed_starts()
 
 
     def _init_ui(self):
         menu_bar = self.menuBar()
-        
+
         file_menu = menu_bar.addMenu("&File")
         exit_action = QAction("&Exit", self)
         exit_action.triggered.connect(self.close)
@@ -425,18 +425,18 @@ class MainWindow(QMainWindow):
         self.table_widget = QTableWidget()
         self.table_widget.setColumnCount(4)
         self.table_widget.setHorizontalHeaderLabels(["Friendly Name", "Service Name", "Status", "PID"])
-        
+
         header = self.table_widget.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
-        
+
         self.table_widget.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table_widget.setAlternatingRowColors(True)
         self.table_widget.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table_widget.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
-        
+
         main_layout.addWidget(self.table_widget)
         self.table_widget.itemSelectionChanged.connect(self._update_button_states)
 
@@ -450,27 +450,27 @@ class MainWindow(QMainWindow):
         self.stop_button.clicked.connect(self._stop_selected_service)
         self.stop_button.setEnabled(False)
         button_layout.addWidget(self.stop_button)
-        
+
         button_layout.addStretch()
         self.refresh_button = QPushButton("Refresh Status")
         self.refresh_button.clicked.connect(self._load_and_display_statuses)
         button_layout.addWidget(self.refresh_button)
-        
+
         main_layout.addLayout(button_layout)
 
     def _open_config_editor(self):
         self.statusBar.showMessage("Loading configuration for editing...")
         current_config = service_utils.load_config(CONFIG_FILE_PATH)
-        if current_config is None: 
-            current_config = [] 
+        if current_config is None:
+            current_config = []
             QMessageBox.warning(self, "Configuration Error", f"Could not load configuration from {CONFIG_FILE_PATH}. Starting with an empty editor.")
 
         dialog = ConfigEditDialog(current_config, self)
-        
-        if dialog.exec(): 
+
+        if dialog.exec():
             self.statusBar.showMessage("Configuration updated. Refreshing main display...", 3000)
-            self._load_and_display_statuses() 
-            self._schedule_initial_delayed_starts() 
+            self._load_and_display_statuses()
+            self._schedule_initial_delayed_starts()
         else:
             self.statusBar.showMessage("Configuration editing cancelled.", 3000)
 
@@ -487,10 +487,10 @@ class MainWindow(QMainWindow):
             service_name = entry.get("ServiceName")
             if service_name:
                 status, _ = service_utils.get_service_status(service_name)
-                if status.lower() in ['stopped', 'not found']: 
+                if status.lower() in ['stopped', 'not found']:
                     service_utils.start_service_app(service_name)
                     services_attempted +=1
-        
+
         self._load_and_display_statuses()
         QMessageBox.information(self, "Action Complete", f"Attempted to start {services_attempted} applicable services. Please check status.")
         self.statusBar.showMessage(f"Attempted to start {services_attempted} services.", 3000)
@@ -503,7 +503,7 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, "Information", "No services configured.")
             self.statusBar.showMessage("No services configured.", 3000)
             return
-        
+
         services_attempted = 0
         for entry in config:
             service_name = entry.get("ServiceName")
@@ -521,26 +521,26 @@ class MainWindow(QMainWindow):
     def _get_selected_service_info(self) -> tuple[str | None, str | None]:
         selected_items = self.table_widget.selectedItems()
         if not selected_items:
-            return None, None 
-
-        current_row = self.table_widget.currentRow()
-        if current_row < 0: 
             return None, None
 
-        service_name_item = self.table_widget.item(current_row, 1) 
-        status_item = self.table_widget.item(current_row, 2)       
+        current_row = self.table_widget.currentRow()
+        if current_row < 0:
+            return None, None
+
+        service_name_item = self.table_widget.item(current_row, 1)
+        status_item = self.table_widget.item(current_row, 2)
 
         if service_name_item and status_item:
             return service_name_item.text(), status_item.text()
-        return None, None 
+        return None, None
 
     def _update_button_states(self):
         service_name, status = self._get_selected_service_info()
 
         if service_name and status:
             status_lower = status.lower()
-            can_start = status_lower in ['stopped', 'not found'] 
-            can_stop = status_lower in ['running', 'paused'] 
+            can_start = status_lower in ['stopped', 'not found']
+            can_stop = status_lower in ['running', 'paused']
             self.start_button.setEnabled(can_start)
             self.stop_button.setEnabled(can_stop)
         else:
@@ -558,7 +558,7 @@ class MainWindow(QMainWindow):
             else:
                 QMessageBox.warning(self, "Start Service", f"Failed to start service '{service_name}'. Check logs or service status.")
                 self.statusBar.showMessage(f"Failed to start '{service_name}'.", 5000)
-            self._load_and_display_statuses() 
+            self._load_and_display_statuses()
 
     def _stop_selected_service(self):
         service_name, status = self._get_selected_service_info()
@@ -575,17 +575,17 @@ class MainWindow(QMainWindow):
 
     def _load_and_display_statuses(self):
         self.statusBar.showMessage("Loading configuration and statuses...")
-        
+
         selected_service_name = None
         if self.table_widget.selectedItems():
             current_row = self.table_widget.currentRow()
             if current_row >= 0:
-                item = self.table_widget.item(current_row, 1) 
+                item = self.table_widget.item(current_row, 1)
                 if item:
                     selected_service_name = item.text()
-        
-        self.table_widget.clearSelection() 
-        
+
+        self.table_widget.clearSelection()
+
         config = service_utils.load_config(CONFIG_FILE_PATH)
 
         if not config:
@@ -599,7 +599,7 @@ class MainWindow(QMainWindow):
                 self.table_widget.setSpan(0,0,1,4)
             else:
                 self.statusBar.showMessage("Configuration loaded, but no services defined or error during load.", 5000)
-            self._update_button_states() 
+            self._update_button_states()
             return
 
         self.table_widget.setRowCount(len(config))
@@ -619,10 +619,10 @@ class MainWindow(QMainWindow):
             pid_str = str(pid) if pid is not None else "N/A"
 
             self._set_table_row(row_index, friendly_name, service_name, status, pid_str)
-            
+
             if service_name == selected_service_name:
                 row_to_reselect = row_index
-            
+
             status_item = self.table_widget.item(row_index, 2)
             if status_item:
                 if status == "running":
@@ -635,13 +635,13 @@ class MainWindow(QMainWindow):
                     status_item.setForeground(QColor("blue"))
                 elif status in ["start_pending", "stop_pending", "continue_pending", "pause_pending"]:
                      status_item.setForeground(QColor(Qt.GlobalColor.magenta))
-                else: 
+                else:
                     status_item.setForeground(QColor("orange"))
-        
+
         if row_to_reselect != -1:
             self.table_widget.selectRow(row_to_reselect)
-        
-        self._update_button_states() 
+
+        self._update_button_states()
         self.statusBar.showMessage(f"Statuses updated. {len(config)} services loaded.", 3000)
 
     def _set_table_row(self, row_index, friendly_name, service_name, status, pid_str):
@@ -675,10 +675,10 @@ class MainWindow(QMainWindow):
                 if current_status == "stopped":
                     QTimer.singleShot(delay_seconds * 1000, lambda s=service_name: self._attempt_delayed_start(s))
                     self.statusBar.showMessage(f"'{service_name}' scheduled for delayed start in {delay_seconds}s.", 5000)
-            
+
     def _attempt_delayed_start(self, service_name: str):
         self.statusBar.showMessage(f"Attempting delayed start for '{service_name}'...", 3000)
-        
+
         current_status, _ = service_utils.get_service_status(service_name)
         if current_status != "stopped":
             self.statusBar.showMessage(f"Delayed start for '{service_name}' skipped: Service no longer stopped (status: {current_status}).", 5000)
@@ -690,7 +690,7 @@ class MainWindow(QMainWindow):
             self.statusBar.showMessage(f"Delayed start command issued for '{service_name}'.", 5000)
         else:
             self.statusBar.showMessage(f"Failed to issue delayed start command for '{service_name}'.", 5000)
-        
+
         self._load_and_display_statuses()
 
 

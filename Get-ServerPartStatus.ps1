@@ -107,7 +107,7 @@ foreach ($entry in $serverConfigs) {
         } else {
              $pid = 0 # Not running, so PID is 0
         }
-        
+
         $statusObject = [PSCustomObject]@{
             FriendlyName = $friendlyName
             ServiceName  = $serviceName

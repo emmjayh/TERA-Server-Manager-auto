@@ -94,7 +94,7 @@ foreach ($entry in $serverConfigs) {
                     # Stop-Service can sometimes hang, especially if a service is misbehaving.
                     # Adding a reasonable timeout.
                     Stop-Service -Name $serviceName -Force -ErrorAction Stop # -Force to stop services with dependent services
-                    
+
                     # Wait for service to actually stop.
                     # Start-Sleep -Seconds 2 # Give it a moment
                     $service.WaitForStatus('Stopped', [TimeSpan]::FromSeconds(30)) # Wait up to 30 seconds
@@ -148,7 +148,7 @@ Write-Host "=================================================="
 if ($servicesFailedToStop -gt 0 -or $servicesNotFound -gt 0) {
     Write-Warning "Some services could not be stopped or were not found. Please review the logs above."
     # Optionally, exit with an error code to indicate issues
-    # exit 1 
+    # exit 1
 }
 
 exit 0

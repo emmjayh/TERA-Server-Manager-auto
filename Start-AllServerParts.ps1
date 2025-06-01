@@ -137,7 +137,7 @@ Write-Host "=================================================="
 if ($servicesFailedToStart -gt 0 -or $servicesNotFound -gt 0) {
     Write-Warning "Some services could not be started or were not found. Please review the logs above."
     # Optionally, exit with an error code to indicate issues
-    # exit 1 
+    # exit 1
 }
 
 exit 0

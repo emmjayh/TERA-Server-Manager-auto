@@ -20,6 +20,7 @@ Both methods rely on a central configuration file (`server_config.json`) to defi
 *   **Programmable Startup Delay (GUI):** Services can be configured with a startup delay. The GUI application will attempt to start these services automatically after the specified delay (in seconds) from when the GUI itself launches, provided the service is currently stopped.
 *   **Auto-detect Application Paths (GUI):** The GUI's configuration editor can attempt to automatically locate application paths based on a specified TERA server base directory and predefined search cues.
 *   Centralized configuration via a single JSON file (`server_config.json`) detailing which existing applications to manage.
+*   Batch script (`start_gui.bat`) for easy launching of the Python GUI, using the `py` Python launcher.
 
 ## 3. File Structure
 
@@ -52,6 +53,7 @@ WindowsAppLauncher/
 │   ├── requirements.txt            # Python dependencies for the GUI
 │   └── test_service_utils.py       # Unit tests for service_utils.py
 ├── server_config.template.json     # Template for the configuration file
+├── start_gui.bat                   # Batch script to launch the Python GUI
 └── README.md                       # This documentation file
 ```
 
@@ -91,14 +93,14 @@ Copy all the files and folders of this management system (maintaining the struct
         "AppArguments": "/config:hub.json",
         "LogDirectory": "C:\\AppLauncherLogs\\HubServer",
         "ServiceName": "HubServerSvc",
-        "StartupDelaySeconds": 5 
+        "StartupDelaySeconds": 5
       },
       {
         "FriendlyName": "Data Processing Utility",
         "AppPath": "D:\\InstalledPrograms\\DataProc\\processor.exe",
         "AppArguments": "--mode=production --threads=4",
         "LogDirectory": "C:\\AppLauncherLogs\\DataProcessor",
-        "ServiceName": "DataProcessorSvc" 
+        "ServiceName": "DataProcessorSvc"
       }
     ]
     ```
@@ -142,7 +144,7 @@ This section details how to manage services using the PowerShell scripts. The `s
 The Python-based GUI provides a visual way to monitor and manage services.
 
 ### Prerequisites (for GUI)
-*   Python 3.x installed (e.g., Python 3.7 or newer).
+*   **Python Installation:** Python 3.x installed (e.g., Python 3.7 or newer). The Python Launcher for Windows (`py.exe`) is typically installed by default with Python from python.org and is recommended for use with `start_gui.bat`. Alternatively, ensure `python` is in your system's PATH.
 *   **Python Dependencies:**
     *   The required Python libraries are listed in `python_gui/requirements.txt`.
     *   To install them, navigate to the project's root directory in your terminal and run:
@@ -157,16 +159,22 @@ The Python-based GUI provides a visual way to monitor and manage services.
 
 ### Running the GUI Application
 
-#### A. Running from Source (Recommended for development)
-1.  Ensure all prerequisites listed above are met.
+To run the GUI application:
+1.  Ensure Python is installed (and the `py` launcher is available or `python` is in PATH).
 2.  Navigate to the project's root directory (e.g., `C:\Tools\WindowsAppLauncher`).
-3.  Run the command:
-    ```bash
-    python python_gui/app_tk.py
-    ```
-    *(If your python executable is named `python3`, use that instead).*
+3.  Double-click the `start_gui.bat` file. This script uses the `py` Python launcher.
 
-#### B. Running the Packaged GUI Application
+Alternatively, you can run it from the command line:
+```bash
+# From the project root directory
+start_gui.bat
+```
+Or, if you prefer to call Python directly (from the project root directory, using the `py` launcher or `python` if in PATH):
+```bash
+py python_gui/app_tk.py
+```
+
+#### Running the Packaged GUI Application (If available)
 If a packaged version (e.g., `ServiceManagerGUI_TK.exe`) is available:
 1.  Place the executable (e.g., `ServiceManagerGUI_TK.exe`) in a dedicated folder.
 2.  Place your `server_config.json` file in the **same directory** as the executable.
@@ -192,7 +200,7 @@ If a packaged version (e.g., `ServiceManagerGUI_TK.exe`) is available:
 
 #### Configuration Editor Window (`Edit Configurations...`)
 This modal dialog allows for managing the `server_config.json` file content:
-*   **TERA Server Base Directory:**
+*   **TERA Server Base Directory Input:**
     *   An input field and "Browse..." button to select the root directory of your TERA server installation. This path is used by the auto-detect feature.
 *   **"Auto-detect App Paths" Button:**
     *   Uses the specified Base Directory and predefined cues (from `service_path_cues.py`) to automatically find and populate the "Application Path" for services in the list below.
@@ -231,10 +239,10 @@ To create a standalone executable from the Python GUI scripts:
     *   `--name ServiceManagerGUI_TK`: Name of the output executable.
     *   `--onefile`: Bundles everything into a single `.exe`.
     *   `--windowed`: Prevents a console window from appearing.
-    *   `--add-data "python_gui/service_path_cues.py:python_gui"`: Ensures `service_path_cues.py` is included. The part after the colon (`:`) specifies the destination folder within the bundle (here, a `python_gui` folder). If `service_utils.py` is not automatically detected due to how it's imported by `app_tk.py` (though direct imports are usually fine), it might also need an `--add-data` flag.
+    *   `--add-data "python_gui/service_path_cues.py:python_gui"`: Ensures `service_path_cues.py` is included.
     *   `python_gui/app_tk.py`: The main script for the GUI.
 4.  The executable will be found in the `dist/` folder.
-5.  Distribute the generated `.exe` file along with `server_config.json` (placed in the same directory as the `.exe`). CustomTkinter themes or assets, if non-default ones were used, might also need to be bundled using `--add-data`.
+5.  Distribute the generated `.exe` file along with `server_config.json` (placed in the same directory as the `.exe`).
 
 ## 9. Logging (Shared)
 
@@ -248,8 +256,9 @@ To create a standalone executable from the Python GUI scripts:
 *   **Paths in `server_config.json`:** Ensure `AppPath` and `LogDirectory` are full, absolute paths with double backslashes (`\\`).
 *   **Admin Privileges:** Required for service management (PowerShell or GUI actions).
 *   **Python GUI:**
-    *   Ensure Python and dependencies from `python_gui/requirements.txt` are installed.
-    *   Verify `app_tk.py`, `service_utils.py`, and `service_path_cues.py` are correctly located in the `python_gui` folder and `server_config.json` is in the project root when running from source.
-    *   Check console output for errors when running `python python_gui/app_tk.py`.
+    *   Ensure Python is installed and accessible via the `py` launcher or that `python` is in the system PATH for `start_gui.bat` to work.
+    *   Ensure required dependencies are installed using `pip install -r python_gui/requirements.txt`.
+    *   Verify `app_tk.py`, `service_utils.py`, and `service_path_cues.py` are correctly located in the `python_gui` folder and `server_config.json` is in the project root when running from source or via `start_gui.bat`.
+    *   Check console output for errors when running `start_gui.bat` or `py python_gui/app_tk.py`.
 
 ```

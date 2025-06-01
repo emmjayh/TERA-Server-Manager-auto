@@ -85,7 +85,7 @@ Write-Host "Starting service uninstallation. Processing $totalEntries entries fr
 Write-Host "--------------------------------------------------"
 
 # Consider processing in reverse if dependencies matter, but for now, as-is.
-# $serverConfigs = $serverConfigs | Sort-Object -Property SomeDependencyProperty -Descending 
+# $serverConfigs = $serverConfigs | Sort-Object -Property SomeDependencyProperty -Descending
 
 foreach ($entry in $serverConfigs) {
     if (-not $entry.PSObject.Properties['ServiceName'] -or [string]::IsNullOrWhiteSpace($entry.ServiceName)) {
@@ -105,7 +105,7 @@ foreach ($entry in $serverConfigs) {
             if ($PSCmdlet.ShouldProcess($serviceName, "Stop Service")) {
                 try {
                     Stop-Service -Name $serviceName -Force -ErrorAction Stop
-                    
+
                     # Wait for the service to actually stop
                     $timeoutSeconds = 30
                     $stopWatch = [System.Diagnostics.Stopwatch]::StartNew()

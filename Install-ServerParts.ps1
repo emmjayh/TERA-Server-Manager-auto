@@ -128,7 +128,7 @@ foreach ($entry in $serverConfigs) {
         $servicesFailed++
         continue
     }
-    
+
     $displayName = if ($entry.PSObject.Properties['FriendlyName'] -and -not [string]::IsNullOrWhiteSpace($entry.FriendlyName)) { $entry.FriendlyName } else { $serviceName }
     $description = if ($entry.PSObject.Properties['Description']) { $entry.Description } else { "Service for $displayName" }
     $appPath = $entry.AppPath
@@ -142,7 +142,7 @@ foreach ($entry in $serverConfigs) {
         Write-Warning "Service '$serviceName' already exists. Skipping creation."
         # Consider this a success for the summary if it already exists as per config? Or a separate counter?
         # For now, not incrementing success, as we didn't create it in this run.
-        continue 
+        continue
     }
 
     $params = @{
@@ -175,12 +175,12 @@ foreach ($entry in $serverConfigs) {
                      $processArgs += " -$key $value"
                 }
             }
-            
+
             $process = Start-Process powershell.exe -ArgumentList $processArgs -Wait -NoNewWindow -PassThru -RedirectStandardOutput ".\$($serviceName)_install.log" -RedirectStandardError ".\$($serviceName)_install.error.log"
-            
+
             $stdout = Get-Content ".\$($serviceName)_install.log" -ErrorAction SilentlyContinue
             $stderr = Get-Content ".\$($serviceName)_install.error.log" -ErrorAction SilentlyContinue
-            
+
             Remove-Item ".\$($serviceName)_install.log" -ErrorAction SilentlyContinue
             Remove-Item ".\$($serviceName)_install.error.log" -ErrorAction SilentlyContinue
 

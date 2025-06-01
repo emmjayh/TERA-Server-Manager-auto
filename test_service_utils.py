@@ -54,9 +54,9 @@ class TestServiceUtils(unittest.TestCase):
         """Test successful saving of config data."""
         test_data = [{"service": "TestSvc", "path": "C:\\app.exe"}]
         filepath = "test_save.json"
-        
+
         result = service_utils.save_config(filepath, test_data)
-        
+
         self.assertTrue(result)
         mock_file_open.assert_called_once_with(filepath, 'w')
         mock_json_dump.assert_called_once_with(test_data, mock_file_open(), indent=4)
@@ -66,9 +66,9 @@ class TestServiceUtils(unittest.TestCase):
         """Test save_config when an IOError occurs."""
         test_data = [{"service": "TestSvc"}]
         filepath = "test_io_error.json"
-        
+
         result = service_utils.save_config(filepath, test_data)
-        
+
         self.assertFalse(result)
         mock_file_open.assert_called_once_with(filepath, 'w')
 
@@ -83,7 +83,7 @@ class TestServiceUtils(unittest.TestCase):
         mock_win_service_get.return_value = mock_service
 
         status, pid = service_utils.get_service_status("TestSvcRunning")
-        
+
         self.assertEqual(status, 'running')
         self.assertEqual(pid, 1234)
         mock_win_service_get.assert_called_once_with("TestSvcRunning")
@@ -101,7 +101,7 @@ class TestServiceUtils(unittest.TestCase):
         mock_win_service_get.return_value = mock_service
 
         status, pid = service_utils.get_service_status("TestSvcStopped")
-        
+
         self.assertEqual(status, 'stopped')
         self.assertIsNone(pid) # As per service_utils.py, PID is None if not running
         mock_win_service_get.assert_called_once_with("TestSvcStopped")
@@ -113,7 +113,7 @@ class TestServiceUtils(unittest.TestCase):
     def test_get_service_status_not_found(self, mock_win_service_get):
         """Test get_service_status for a service that is not found."""
         status, pid = service_utils.get_service_status("TestSvcNotFound")
-        
+
         self.assertEqual(status, 'Not Found')
         self.assertIsNone(pid)
         mock_win_service_get.assert_called_once_with("TestSvcNotFound")
@@ -123,9 +123,9 @@ class TestServiceUtils(unittest.TestCase):
         """Test start_service_app successful execution."""
         mock_subprocess_run.return_value = make_completed_process(returncode=0)
         service_name = "MyTestService"
-        
+
         result = service_utils.start_service_app(service_name)
-        
+
         self.assertTrue(result)
         mock_subprocess_run.assert_called_once_with(
             ["sc.exe", "start", service_name],
@@ -140,9 +140,9 @@ class TestServiceUtils(unittest.TestCase):
         """Test start_service_app when sc.exe reports failure."""
         mock_subprocess_run.return_value = make_completed_process(returncode=1058, stderr="Service disabled") # Example error code
         service_name = "DisabledService"
-        
+
         result = service_utils.start_service_app(service_name)
-        
+
         self.assertFalse(result)
         mock_subprocess_run.assert_called_once_with(
             ["sc.exe", "start", service_name],
@@ -154,15 +154,15 @@ class TestServiceUtils(unittest.TestCase):
         """Test start_service_app when service is already running (SC.EXE code 1056)."""
         mock_subprocess_run.return_value = make_completed_process(returncode=1056) # SC_MANAGER_ALREADY_RUNNING
         service_name = "AlreadyRunningSvc"
-        
+
         result = service_utils.start_service_app(service_name)
-        
+
         self.assertTrue(result) # As per service_utils.py, this is considered success
         mock_subprocess_run.assert_called_once_with(
             ["sc.exe", "start", service_name],
             check=False, capture_output=True, text=True, timeout=30
         )
-    
+
     @patch('service_utils.subprocess.run', side_effect=subprocess.TimeoutExpired(cmd="sc.exe start TestSvc", timeout=30))
     def test_start_service_app_timeout(self, mock_subprocess_run):
         """Test start_service_app when subprocess.run times out."""
@@ -176,9 +176,9 @@ class TestServiceUtils(unittest.TestCase):
         """Test stop_service_app successful execution."""
         mock_subprocess_run.return_value = make_completed_process(returncode=0)
         service_name = "MyTestServiceToStop"
-        
+
         result = service_utils.stop_service_app(service_name)
-        
+
         self.assertTrue(result)
         mock_subprocess_run.assert_called_once_with(
             ["sc.exe", "stop", service_name],
@@ -190,9 +190,9 @@ class TestServiceUtils(unittest.TestCase):
         """Test stop_service_app when sc.exe reports failure."""
         mock_subprocess_run.return_value = make_completed_process(returncode=1060, stderr="Service does not exist") # Example error code
         service_name = "NonExistentSvcForStop"
-        
+
         result = service_utils.stop_service_app(service_name)
-        
+
         self.assertFalse(result)
         mock_subprocess_run.assert_called_once_with(
             ["sc.exe", "stop", service_name],
@@ -204,9 +204,9 @@ class TestServiceUtils(unittest.TestCase):
         """Test stop_service_app when service is not running (SC.EXE code 1062)."""
         mock_subprocess_run.return_value = make_completed_process(returncode=1062) # ERROR_SERVICE_NOT_ACTIVE
         service_name = "NotRunningSvc"
-        
+
         result = service_utils.stop_service_app(service_name)
-        
+
         self.assertTrue(result) # As per service_utils.py, this is considered success
         mock_subprocess_run.assert_called_once_with(
             ["sc.exe", "stop", service_name],

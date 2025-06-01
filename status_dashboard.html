@@ -109,10 +109,10 @@
 
                         friendlyNameCell.textContent = item.FriendlyName || 'N/A';
                         serviceNameCell.textContent = item.ServiceName || 'N/A';
-                        
+
                         statusCell.textContent = item.Status || 'N/A';
                         statusCell.className = getStatusClass(item.Status);
-                        
+
                         pidCell.textContent = (item.PID === null || item.PID === undefined || (item.Status && item.Status.toLowerCase() !== 'running')) ? 'N/A' : item.PID;
                     });
                 } else {

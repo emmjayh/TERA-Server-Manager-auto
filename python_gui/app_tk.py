@@ -2,12 +2,12 @@ import tkinter
 import tkinter.filedialog # For file/directory dialogs
 import tkinter.messagebox # For error popup if service_utils is missing
 import customtkinter
-import os 
+import os
 import glob # For path detection
 
 # Assuming service_utils.py and service_path_cues.py are in the same directory (python_gui)
 try:
-    import service_utils 
+    import service_utils
 except ImportError as e_import:
     import sys
     current_script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -31,7 +31,7 @@ customtkinter.set_default_color_theme("blue")  # Themes: "blue" (default), "gree
 class AddEditServiceWindow(customtkinter.CTkToplevel):
     def __init__(self, master, service_data=None, existing_service_names=None):
         super().__init__(master)
-        self.master_window = master 
+        self.master_window = master
 
         self.service_data_in = service_data # Store initial data for editing
         self.existing_service_names = existing_service_names if existing_service_names else []
@@ -42,16 +42,16 @@ class AddEditServiceWindow(customtkinter.CTkToplevel):
             self.title("Edit Service")
         else:
             self.title("Add Service")
-        
+
         self.geometry("500x350")
-        self.transient(master) 
-        self.grab_set()      
+        self.transient(master)
+        self.grab_set()
 
         self._init_ui()
 
         if self.is_editing_mode and self.service_data_in:
             self._populate_fields()
-            self.service_name_entry.configure(state="disabled") 
+            self.service_name_entry.configure(state="disabled")
 
     def _init_ui(self):
         main_frame = customtkinter.CTkFrame(self)
@@ -90,18 +90,18 @@ class AddEditServiceWindow(customtkinter.CTkToplevel):
         self.log_dir_browse_button.grid(row=0, column=1)
 
         customtkinter.CTkLabel(main_frame, text="Startup Delay (sec):").grid(row=5, column=0, padx=10, pady=5, sticky="w")
-        self.startup_delay_entry = customtkinter.CTkEntry(main_frame) 
+        self.startup_delay_entry = customtkinter.CTkEntry(main_frame)
         self.startup_delay_entry.grid(row=5, column=1, padx=10, pady=5, sticky="ew")
-        self.startup_delay_entry.insert(0, "0") 
+        self.startup_delay_entry.insert(0, "0")
 
         button_frame = customtkinter.CTkFrame(main_frame, fg_color="transparent")
         button_frame.grid(row=6, column=0, columnspan=2, pady=20, sticky="ew")
-        button_frame.grid_columnconfigure(0, weight=1) 
+        button_frame.grid_columnconfigure(0, weight=1)
         button_frame.grid_columnconfigure(1, weight=1)
 
         self.ok_button = customtkinter.CTkButton(button_frame, text="OK", command=self._on_ok)
         self.ok_button.grid(row=0, column=0, padx=10, pady=10, sticky="e")
-        
+
         self.cancel_button = customtkinter.CTkButton(button_frame, text="Cancel", command=self._on_cancel, fg_color="gray")
         self.cancel_button.grid(row=0, column=1, padx=10, pady=10, sticky="w")
 
@@ -135,8 +135,8 @@ class AddEditServiceWindow(customtkinter.CTkToplevel):
         log_dir = self.log_dir_entry.get().strip()
         startup_delay_str = self.startup_delay_entry.get().strip()
 
-        if not friendly_name: 
-            friendly_name = service_name 
+        if not friendly_name:
+            friendly_name = service_name
 
         if not service_name:
             tkinter.messagebox.showerror("Error", "Service Name cannot be empty.", parent=self)
@@ -144,7 +144,7 @@ class AddEditServiceWindow(customtkinter.CTkToplevel):
         if not app_path:
             tkinter.messagebox.showerror("Error", "App Path cannot be empty.", parent=self)
             return
-        if not log_dir: 
+        if not log_dir:
              tkinter.messagebox.showerror("Error", "Log Directory cannot be empty.", parent=self)
              return
 
@@ -154,7 +154,7 @@ class AddEditServiceWindow(customtkinter.CTkToplevel):
 
         try:
             delay_value = int(startup_delay_str)
-            if not (0 <= delay_value <= 3600): 
+            if not (0 <= delay_value <= 3600):
                 raise ValueError("Delay out of range")
         except ValueError:
             tkinter.messagebox.showerror("Error", "Startup Delay must be an integer between 0 and 3600.", parent=self)
@@ -164,7 +164,7 @@ class AddEditServiceWindow(customtkinter.CTkToplevel):
             if service_name.lower() in [name.lower() for name in self.existing_service_names]:
                 tkinter.messagebox.showerror("Error", f"Service Name '{service_name}' already exists.", parent=self)
                 return
-        
+
         self.result_data = {
             "FriendlyName": friendly_name,
             "ServiceName": service_name,
@@ -174,7 +174,7 @@ class AddEditServiceWindow(customtkinter.CTkToplevel):
         }
         if delay_value > 0:
             self.result_data["StartupDelaySeconds"] = delay_value
-        
+
         self.destroy()
 
     def _on_cancel(self):
@@ -185,7 +185,7 @@ class ConfigEditWindow(customtkinter.CTkToplevel):
     def __init__(self, master):
         super().__init__(master)
         self.master_window = master
-        self.config_data_changed = False 
+        self.config_data_changed = False
 
         self.title("Edit Service Configurations")
         self.geometry("1000x700")
@@ -247,30 +247,30 @@ class ConfigEditWindow(customtkinter.CTkToplevel):
         if dirPath:
             self.base_dir_edit.delete(0, "end")
             self.base_dir_edit.insert(0, dirPath)
-    
+
     def _populate_config_list(self):
         for widget_info in self.service_row_widgets:
             widget_info["frame"].destroy()
         self.service_row_widgets.clear()
-        
-        current_selection_index_before_repop = self.selected_service_index 
-        self.selected_service_index = None 
+
+        current_selection_index_before_repop = self.selected_service_index
+        self.selected_service_index = None
 
         headers = ["Friendly Name", "Service Name", "Application Path"]
         header_frame_list = customtkinter.CTkFrame(self.scrollable_config_frame, fg_color="transparent")
         header_frame_list.pack(fill="x", pady=(0,5), before=self.scrollable_config_frame.winfo_children()[0] if self.scrollable_config_frame.winfo_children() else None)
         for col, header_text in enumerate(headers):
-            header_frame_list.grid_columnconfigure(col, weight=1 if col == 0 else (2 if col == 1 else 3)) 
+            header_frame_list.grid_columnconfigure(col, weight=1 if col == 0 else (2 if col == 1 else 3))
             customtkinter.CTkLabel(header_frame_list, text=header_text, font=customtkinter.CTkFont(weight="bold")).grid(row=0, column=col, padx=5, sticky="w")
-        self.service_row_widgets.append({"frame": header_frame_list, "is_header": True}) 
+        self.service_row_widgets.append({"frame": header_frame_list, "is_header": True})
 
         for idx, service_item in enumerate(self.config_data_working_copy):
             row_frame = customtkinter.CTkFrame(self.scrollable_config_frame, height=30, fg_color="transparent")
             row_frame.pack(fill="x", pady=1, padx=1)
-            
+
             row_frame.grid_columnconfigure(0, weight=1)
-            row_frame.grid_columnconfigure(1, weight=2) 
-            row_frame.grid_columnconfigure(2, weight=3) 
+            row_frame.grid_columnconfigure(1, weight=2)
+            row_frame.grid_columnconfigure(2, weight=3)
 
             fn_label = customtkinter.CTkLabel(row_frame, text=service_item.get("FriendlyName", "N/A"), anchor="w")
             fn_label.grid(row=0, column=0, padx=5, sticky="ew")
@@ -280,10 +280,10 @@ class ConfigEditWindow(customtkinter.CTkToplevel):
             ap_label.grid(row=0, column=2, padx=5, sticky="ew")
 
             self.service_row_widgets.append({"frame": row_frame, "data": service_item, "index": idx})
-            
+
             for widget in [row_frame, fn_label, sn_label, ap_label]:
                  widget.bind("<Button-1>", lambda event, index=idx: self._on_service_row_selected(index))
-        
+
         if current_selection_index_before_repop is not None and current_selection_index_before_repop < len(self.config_data_working_copy):
              self._on_service_row_selected(current_selection_index_before_repop)
         else:
@@ -292,14 +292,14 @@ class ConfigEditWindow(customtkinter.CTkToplevel):
 
     def _on_service_row_selected(self, index):
         for i, widget_info in enumerate(self.service_row_widgets):
-            if not widget_info.get("is_header", False): 
-                if i == self.selected_service_index +1: 
+            if not widget_info.get("is_header", False):
+                if i == self.selected_service_index +1:
                      widget_info["frame"].configure(fg_color="transparent")
-        
+
         self.selected_service_index = index
         if self.selected_service_index is not None and (self.selected_service_index + 1) < len(self.service_row_widgets):
             self.service_row_widgets[self.selected_service_index + 1]["frame"].configure(fg_color=("gray75", "gray25"))
-        
+
         self._update_edit_remove_button_states()
 
 
@@ -317,13 +317,13 @@ class ConfigEditWindow(customtkinter.CTkToplevel):
             self._populate_config_list()
             new_index = len(self.config_data_working_copy) - 1
             if new_index >=0 :
-                 self._on_service_row_selected(new_index) 
+                 self._on_service_row_selected(new_index)
 
     def _edit_service(self):
         if self.selected_service_index is None or self.selected_service_index >= len(self.config_data_working_copy):
             tkinter.messagebox.showwarning("No Selection", "Please select a service to edit.", parent=self)
             return
-        
+
         service_to_edit = self.config_data_working_copy[self.selected_service_index]
         dialog = AddEditServiceWindow(master=self, service_data=dict(service_to_edit))
         self.wait_window(dialog)
@@ -336,12 +336,12 @@ class ConfigEditWindow(customtkinter.CTkToplevel):
         if self.selected_service_index is None or self.selected_service_index >= len(self.config_data_working_copy):
             tkinter.messagebox.showwarning("No Selection", "Please select a service to remove.", parent=self)
             return
-        
+
         service_to_remove = self.config_data_working_copy[self.selected_service_index]
         if tkinter.messagebox.askyesno("Confirm Delete", f"Are you sure you want to remove '{service_to_remove.get('FriendlyName')}'?", parent=self):
             del self.config_data_working_copy[self.selected_service_index]
-            self.selected_service_index = None 
-            self._populate_config_list() 
+            self.selected_service_index = None
+            self._populate_config_list()
 
     def _auto_detect_paths(self):
         base_directory = self.base_dir_edit.get().strip()
@@ -371,18 +371,18 @@ class ConfigEditWindow(customtkinter.CTkToplevel):
                 sub_dir = cue.get("sub_dir", "")
                 filename_pattern = cue["filename_pattern"]
                 current_search_path = os.path.join(base_directory, sub_dir, filename_pattern)
-                
+
                 matches = glob.glob(current_search_path)
                 if matches:
                     service_entry["AppPath"] = os.path.normpath(matches[0])
                     found_count += 1
                     path_found_for_this_service = True
-                    break 
-            
+                    break
+
             if not path_found_for_this_service:
                 not_found_services.append(service_name)
-        
-        self._populate_config_list() 
+
+        self._populate_config_list()
 
         message = f"Path detection complete.\n\nFound paths for {found_count} service(s).\n"
         if not_found_services:
@@ -398,7 +398,7 @@ class ConfigEditWindow(customtkinter.CTkToplevel):
     def _save_changes(self):
         if service_utils and service_utils.save_config(self.master_window.config_file_path, self.config_data_working_copy):
             tkinter.messagebox.showinfo("Success", "Configuration saved successfully.", parent=self)
-            self.master_window.config_data_changed_by_editor = True 
+            self.master_window.config_data_changed_by_editor = True
             self.destroy()
         else:
             tkinter.messagebox.showerror("Error", "Failed to save configuration.", parent=self)
@@ -411,8 +411,8 @@ class App(customtkinter.CTk):
         self.geometry("1000x650") # Slightly taller for new buttons row
 
         self.service_utils_available = bool(service_utils)
-        self.config_data_changed_by_editor = False 
-        
+        self.config_data_changed_by_editor = False
+
         self.config_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "server_config.json")
         self.config_file_path = os.path.normpath(self.config_file_path)
 
@@ -429,9 +429,9 @@ class App(customtkinter.CTk):
         # Header for the service list
         header_frame = customtkinter.CTkFrame(self.main_frame, fg_color="transparent")
         header_frame.pack(fill="x", padx=10, pady=(0,5))
-        
+
         self.headers = ["Friendly Name", "Service Name", "Status", "PID", "Actions"]
-        self.column_weights = [3, 2, 1, 1, 2] 
+        self.column_weights = [3, 2, 1, 1, 2]
 
         for i, header_text in enumerate(self.headers):
             header_frame.grid_columnconfigure(i, weight=self.column_weights[i])
@@ -441,12 +441,12 @@ class App(customtkinter.CTk):
 
         self.scrollable_frame = customtkinter.CTkScrollableFrame(self.main_frame)
         self.scrollable_frame.pack(pady=5, padx=10, fill="both", expand=True)
-        self.service_row_frames = [] 
+        self.service_row_frames = []
 
         # Bottom control buttons frame
         bottom_controls_frame = customtkinter.CTkFrame(self.main_frame, fg_color="transparent")
         bottom_controls_frame.pack(fill="x", pady=10, padx=10)
-        
+
         self.start_all_button = customtkinter.CTkButton(bottom_controls_frame, text="Start All Services", command=self._start_all_services)
         self.start_all_button.pack(side="left", padx=5)
 
@@ -475,23 +475,23 @@ class App(customtkinter.CTk):
             return
 
         self.load_and_display_statuses()
-        self.after(10000, self.auto_refresh_statuses) 
-        self.after(500, self._schedule_initial_delayed_starts) 
+        self.after(10000, self.auto_refresh_statuses)
+        self.after(500, self._schedule_initial_delayed_starts)
 
 
     def _open_config_editor(self):
         if not self.service_utils_available:
             tkinter.messagebox.showerror("Error", "service_utils.py not available. Cannot edit configurations.", parent=self)
             return
-        
-        self.config_data_changed_by_editor = False 
-        config_editor_window = ConfigEditWindow(self)
-        self.wait_window(config_editor_window) 
 
-        if self.config_data_changed_by_editor: 
+        self.config_data_changed_by_editor = False
+        config_editor_window = ConfigEditWindow(self)
+        self.wait_window(config_editor_window)
+
+        if self.config_data_changed_by_editor:
             self.status_bar.configure(text="Configuration updated. Refreshing statuses...")
             self.load_and_display_statuses()
-            self.after(500, self._schedule_initial_delayed_starts) 
+            self.after(500, self._schedule_initial_delayed_starts)
         else:
             self.status_bar.configure(text="Configuration edit cancelled or no changes made.")
 
@@ -499,17 +499,17 @@ class App(customtkinter.CTk):
     def auto_refresh_statuses(self):
         if self.service_utils_available:
             self.load_and_display_statuses()
-        self.after(10000, self.auto_refresh_statuses) 
+        self.after(10000, self.auto_refresh_statuses)
 
     def create_service_row(self, parent_frame, service_info, status_info):
         row_frame = customtkinter.CTkFrame(parent_frame, fg_color=("gray90", "gray20"), height=30)
-        row_frame.pack(fill="x", pady=1, padx=1) 
-        
+        row_frame.pack(fill="x", pady=1, padx=1)
+
         for i, weight in enumerate(self.column_weights):
             row_frame.grid_columnconfigure(i, weight=weight)
 
         friendly_name = service_info.get("FriendlyName", "N/A")
-        service_name = service_info.get("ServiceName", "N/A") 
+        service_name = service_info.get("ServiceName", "N/A")
         status, pid = status_info
 
         details = [
@@ -518,26 +518,26 @@ class App(customtkinter.CTk):
             status,
             str(pid if pid is not None else "N/A")
         ]
-        
+
         for i, detail_text in enumerate(details):
             detail_label = customtkinter.CTkLabel(row_frame, text=detail_text, anchor="w")
             detail_label.grid(row=0, column=i, padx=5, pady=2, sticky="ew")
 
-            if i == 2: 
-                color = "white" 
+            if i == 2:
+                color = "white"
                 if status == "running": color = "lightgreen"
                 elif status == "stopped": color = "salmon"
                 elif status == "Not Found": color = "gray"
                 elif "pending" in status.lower(): color = "orange"
                 elif status == "ConfigError": color = "yellow"
                 detail_label.configure(text_color=color)
-        
+
         actions_frame = customtkinter.CTkFrame(row_frame, fg_color="transparent")
         actions_frame.grid(row=0, column=4, sticky="ew", padx=5)
 
         start_button = customtkinter.CTkButton(actions_frame, text="Start", width=60)
         start_button.pack(side="left", padx=2)
-        
+
         stop_button = customtkinter.CTkButton(actions_frame, text="Stop", width=60)
         stop_button.pack(side="left", padx=2)
 
@@ -558,41 +558,41 @@ class App(customtkinter.CTk):
         elif status_lower == "stopped":
             start_button.configure(state="normal")
             stop_button.configure(state="disabled")
-        else: 
-            start_button.configure(state="disabled") 
+        else:
+            start_button.configure(state="disabled")
             stop_button.configure(state="disabled")
-            if status_lower == "not found": 
+            if status_lower == "not found":
                 start_button.configure(state="normal")
         return row_frame
 
     def _start_single_service(self, service_name: str):
         if service_name == "N/A" or service_name == "INVALID_CONFIG" or not self.service_utils_available:
             return
-        
+
         self.status_bar.configure(text=f"Attempting to start {service_name}...")
         success = service_utils.start_service_app(service_name)
-        
+
         if success:
             self.status_bar.configure(text=f"Start command issued for {service_name}.")
         else:
             self.status_bar.configure(text=f"Failed to issue start command for {service_name}.")
             tkinter.messagebox.showerror("Error", f"Could not start service: {service_name}", parent=self)
-        
+
         self.load_and_display_statuses()
 
     def _stop_single_service(self, service_name: str):
         if service_name == "N/A" or service_name == "INVALID_CONFIG" or not self.service_utils_available:
             return
-            
+
         self.status_bar.configure(text=f"Attempting to stop {service_name}...")
         success = service_utils.stop_service_app(service_name)
-        
+
         if success:
             self.status_bar.configure(text=f"Stop command issued for {service_name}.")
         else:
             self.status_bar.configure(text=f"Failed to issue stop command for {service_name}.")
             tkinter.messagebox.showerror("Error", f"Could not stop service: {service_name}", parent=self)
-            
+
         self.load_and_display_statuses()
 
     def _start_all_services(self):
@@ -610,7 +610,7 @@ class App(customtkinter.CTk):
         started_count = 0
         already_running_count = 0
         failed_to_start = []
-        
+
         for entry in config:
             service_name = entry.get("ServiceName")
             if service_name:
@@ -622,12 +622,12 @@ class App(customtkinter.CTk):
                         failed_to_start.append(service_name)
                 elif status == "running":
                     already_running_count +=1
-        
+
         self.load_and_display_statuses()
         summary_message = f"Start All action complete.\n\nStarted: {started_count}\nAlready Running: {already_running_count}"
         if failed_to_start:
             summary_message += f"\nFailed to start: {', '.join(failed_to_start)}"
-        
+
         self.status_bar.configure(text=f"Start All: {started_count} started, {already_running_count} already running.")
         tkinter.messagebox.showinfo("Start All Services", summary_message, parent=self)
 
@@ -658,7 +658,7 @@ class App(customtkinter.CTk):
                         failed_to_stop.append(service_name)
                 elif status == "stopped":
                     already_stopped_count +=1
-        
+
         self.load_and_display_statuses()
         summary_message = f"Stop All action complete.\n\nStopped: {stopped_count}\nAlready Stopped: {already_stopped_count}"
         if failed_to_stop:
@@ -674,7 +674,7 @@ class App(customtkinter.CTk):
             return
 
         self.status_bar.configure(text="Loading service configurations...")
-        
+
         config = service_utils.load_config(self.config_file_path)
 
         for frame in self.service_row_frames:
@@ -686,7 +686,7 @@ class App(customtkinter.CTk):
                  msg = f"ERROR: Configuration file '{self.config_file_path}' not found."
             else:
                  msg = f"No services found in '{self.config_file_path}' or file is empty/invalid."
-            
+
             self.status_bar.configure(text=msg)
             no_service_label = customtkinter.CTkLabel(self.scrollable_frame, text=msg)
             no_service_label.pack(pady=20)
@@ -707,7 +707,7 @@ class App(customtkinter.CTk):
                 error_status = ("ConfigError", None)
                 row = self.create_service_row(self.scrollable_frame, error_info, error_status)
                 self.service_row_frames.append(row)
-        
+
         if not any_service_valid and config:
             msg = "Configuration file has entries but all are missing 'ServiceName'."
             self.status_bar.configure(text=msg)
@@ -736,11 +736,11 @@ class App(customtkinter.CTk):
                 if current_status == "stopped":
                     self.after(delay_seconds * 1000, lambda s=service_name: self._attempt_delayed_start(s))
                     self.status_bar.configure(text=f"'{service_name}' scheduled for delayed start in {delay_seconds}s.")
-            
+
     def _attempt_delayed_start(self, service_name: str):
         if not self.service_utils_available: return
         self.status_bar.configure(text=f"Attempting delayed start for {service_name}...")
-        
+
         current_status, _ = service_utils.get_service_status(service_name)
         if current_status != "stopped":
             self.status_bar.configure(text=f"Delayed start for '{service_name}' skipped: Service no longer stopped (status: {current_status}).")
@@ -752,7 +752,7 @@ class App(customtkinter.CTk):
             self.status_bar.configure(text=f"Delayed start command issued for '{service_name}'.")
         else:
             self.status_bar.configure(text=f"Failed to issue delayed start command for '{service_name}'.")
-        
+
         self.load_and_display_statuses()
 
 

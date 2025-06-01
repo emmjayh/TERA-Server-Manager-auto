@@ -129,7 +129,7 @@ try {
                     # Execute Get-ServerPartStatus.ps1 and capture its JSON output
                     # Using Start-Process to ensure it runs in a separate scope and captures standard output correctly.
                     $pwshArgs = "-NoProfile -ExecutionPolicy Bypass -File ""$GetStatusScriptPath"" -ConfigFilePath ""$ConfigFilePath"" -OutputToJson"
-                    
+
                     $processInfo = New-Object System.Diagnostics.ProcessStartInfo
                     $processInfo.FileName = "powershell.exe"
                     $processInfo.Arguments = $pwshArgs
@@ -137,10 +137,10 @@ try {
                     $processInfo.RedirectStandardError = $true
                     $processInfo.UseShellExecute = $false
                     $processInfo.CreateNoWindow = $true
-                    
+
                     $process = New-Object System.Diagnostics.Process
                     $process.StartInfo = $processInfo
-                    
+
                     $process.Start() | Out-Null
                     $jsonOutput = $process.StandardOutput.ReadToEnd()
                     $jsonError = $process.StandardError.ReadToEnd()

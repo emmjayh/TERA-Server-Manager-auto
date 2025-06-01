@@ -71,7 +71,7 @@ if ([string]::IsNullOrWhiteSpace($WorkingDirectory)) {
 # Launch the executable
 try {
     $process = Start-Process -FilePath $TargetFilePath -ArgumentList $LaunchArguments -WorkingDirectory $WorkingDirectory -PassThru -RedirectStandardOutput $logFilePath -RedirectStandardError $logFilePath -WindowStyle Normal -ErrorAction Stop
-    
+
     if ($process -and $process.Id) {
         Write-Output $process.Id.ToString()
     } else {
