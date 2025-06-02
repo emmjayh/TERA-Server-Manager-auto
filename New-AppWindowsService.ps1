@@ -168,10 +168,10 @@ try {
         $resetPeriodSeconds = 86400 # 1 day
         $restartDelayMs = 60000   # 1 minute
         $failureActions = "restart/$restartDelayMs/restart/$restartDelayMs/restart/$restartDelayMs"
-
+        
         $scCommand = "sc.exe failure ""$ServiceName"" reset= $resetPeriodSeconds actions= $failureActions"
         Write-Verbose "Configuring recovery options for '$ServiceName': $scCommand"
-
+        
         Invoke-Expression $scCommand
         $scExitCode = $LASTEXITCODE
         if ($scExitCode -ne 0) {

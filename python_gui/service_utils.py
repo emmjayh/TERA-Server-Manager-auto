@@ -111,14 +111,14 @@ def start_service_app(service_name: str) -> bool:
             text=True,
             timeout=30 # Add a timeout for sc.exe to respond
         )
-
+        
         # Typical success output from `sc.exe start` might include "STATE" information.
         # A return code of 0 is usually a good sign.
         # Some error codes:
         # 1056: An instance of the service is already running. (Consider this a success for "start")
         # 1060: The specified service does not exist as an installed service.
         # 1058: The service cannot be started, either because it is disabled or because it has no enabled devices associated with it.
-
+        
         if result.returncode == 0:
             print(f"Command 'sc.exe start {service_name}' executed successfully.")
             return True
@@ -130,7 +130,7 @@ def start_service_app(service_name: str) -> bool:
             print(f"SC.exe STDOUT: {result.stdout.strip()}")
             print(f"SC.exe STDERR: {result.stderr.strip()}")
             return False
-
+            
     except FileNotFoundError:
         print("Error: 'sc.exe' not found. Ensure it's in the system PATH.")
         return False
@@ -164,7 +164,7 @@ def stop_service_app(service_name: str) -> bool:
         # Error codes:
         # 1062: The service has not been started. (Consider this a success for "stop")
         # 1060: The specified service does not exist as an installed service.
-
+        
         if result.returncode == 0:
             print(f"Command 'sc.exe stop {service_name}' executed successfully.")
             return True
@@ -189,12 +189,12 @@ def stop_service_app(service_name: str) -> bool:
 
 if __name__ == "__main__":
     print("--- Testing service_utils.py ---")
-
+    
     # Create a dummy server_config.json for testing load/save if it doesn't exist
     # This will be in the same directory as service_utils.py if run directly.
     # For a real application, provide a full path or handle paths appropriately.
-    test_config_path = "server_config_test.json"
-
+    test_config_path = "server_config_test.json" 
+    
     config_data_to_save = [
         {"ServiceName": "TestSvcPy1", "FriendlyName": "My Python Test Service 1", "AppPath": "C:\\dummy1.exe"},
         {"ServiceName": "TestSvcPy2", "FriendlyName": "My Python Test Service 2", "AppPath": "C:\\dummy2.bat"}
@@ -223,7 +223,7 @@ if __name__ == "__main__":
     # Test get_service_status
     # Using 'PrintSpooler' as it's a common Windows service. Replace if needed.
     # Or use a service created by the PowerShell scripts if they were run.
-    test_service_name = "PrintSpooler"
+    test_service_name = "PrintSpooler" 
     print(f"\nAttempting to get status for service '{test_service_name}'...")
     status, pid = get_service_status(test_service_name)
     print(f"Service '{test_service_name}': Status = {status}, PID = {pid}")
@@ -238,7 +238,7 @@ if __name__ == "__main__":
     # Do NOT run this on a critical system without understanding the implications.
     # For CI/CD or non-critical test environments, this might be acceptable.
     # It's better to have a dedicated dummy service for these tests.
-
+    
     # For now, we'll just call them with a non-existent service to show they run without crashing.
     # To truly test start/stop, a service would need to be installed.
     print(f"\nAttempting to start '{non_existent_service}' (expected to fail as it doesn't exist)...")
@@ -248,7 +248,7 @@ if __name__ == "__main__":
     print(f"\nAttempting to stop '{non_existent_service}' (expected to fail or report not running)...")
     stop_result = stop_service_app(non_existent_service)
     print(f"Result of stopping '{non_existent_service}': {stop_result}")
-
+    
     # Example of trying to stop an actual service (use with caution)
     # print(f"\nAttempting to stop '{test_service_name}'...")
     # if get_service_status(test_service_name)[0] == 'running':

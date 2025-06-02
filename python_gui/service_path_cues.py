@@ -228,7 +228,7 @@ if __name__ == '__main__':
     if SERVICE_PATH_CUES:
         print("\nExample entry (hubServer):")
         print(json.dumps(SERVICE_PATH_CUES[0], indent=4))
-
+    
     arbiter_server_entry = next((item for item in SERVICE_PATH_CUES if item["ServiceName"] == "ArbiterServer"), None)
     if arbiter_server_entry:
         print("\nExample entry (ArbiterServer):")

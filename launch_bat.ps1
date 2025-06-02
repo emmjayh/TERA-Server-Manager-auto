@@ -68,9 +68,9 @@ try {
     # Note: Getting the PID of cmd.exe that *reliably* stays around for the whole batch duration is tricky.
     # cmd.exe might exit, but child processes of the batch file might continue.
     # This will get the PID of the initial cmd.exe process.
-
+    
     $process = Start-Process -FilePath $command -ArgumentList "$arguments *>&1> `"$logFilePath`"" -PassThru -WindowStyle Normal -ErrorAction Stop
-
+    
     if ($process -and $process.Id) {
         Write-Output $process.Id.ToString()
     } else {
